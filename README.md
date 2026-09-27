@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🧭 CS Career Intelligence Platform
+# 🧭 Career Intelligence Platform
 
 ### *Evidence-Based Career Roadmaps Grounded in Real Job Market Data*
 
