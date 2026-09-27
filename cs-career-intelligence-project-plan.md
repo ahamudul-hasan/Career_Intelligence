@@ -17,7 +17,6 @@ A practical, phase-by-phase build guide. Follow the phases in order — each one
 ---
 
 ## Phase 1 — Project Skeleton (Sections 34–35)
-
 1. **Backend**: `flask`, `flask-cors`, `sqlalchemy`, `flask-migrate`, `python-dotenv`, `pydantic`, `langchain-google-genai`. Scaffold the folder structure exactly as listed in Section 34 (empty files are fine for now).
 2. **Frontend**: `npm create vite@latest frontend -- --template react-ts`, then add Tailwind, React Router, Axios, Recharts.
 3. **Database**: create a `database/` folder at the repo root (sibling to `backend/` and `frontend/`) to hold raw SQL — see the structure below. `flask-migrate`/Alembic still owns your actual schema migrations inside `backend/migrations/`; `database/` is for hand-written/reference SQL and seed data.
@@ -37,7 +36,6 @@ A practical, phase-by-phase build guide. Follow the phases in order — each one
    │
    └── README.md                # how schema.sql relates to Alembic migrations, how to (re)seed locally
    ```
-
 4. Build one endpoint: `GET /api/health` returning `{"status": "ok"}`.
 5. Build one frontend page that calls `/api/health` and displays the result.
 

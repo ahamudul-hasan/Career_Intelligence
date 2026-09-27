@@ -1,9 +1,10 @@
 import os
 from pathlib import Path
 from dotenv import load_dotenv
+from backend.config.settings import GAP_THRESHOLDS, EXPERIENCE_LEVELS, JOB_SOURCES, CAREER_CATEGORIES
 
 # Load .env from project root
-BASE_DIR = Path(__file__).resolve().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 load_dotenv(BASE_DIR / ".env")
 
 class Config:
@@ -36,3 +37,11 @@ class Config:
     CORS_ORIGINS = [
         origin.strip() for origin in os.getenv("CORS_ORIGINS", "http://localhost:5173,http://127.0.0.1:5173").split(",")
     ]
+
+__all__ = [
+    "Config",
+    "GAP_THRESHOLDS",
+    "EXPERIENCE_LEVELS",
+    "JOB_SOURCES",
+    "CAREER_CATEGORIES",
+]
