@@ -10,7 +10,6 @@
 [![MySQL](https://img.shields.io/badge/MySQL-Database-4479A1?logo=mysql&logoColor=white)](#)
 [![LangChain](https://img.shields.io/badge/LangChain-AI%20Orchestration-1C3C3C)](#)
 [![Gemini](https://img.shields.io/badge/Gemini-LLM-8E75B2?logo=googlegemini&logoColor=white)](#)
-[![License](https://img.shields.io/badge/License-MIT-green.svg)](#-license)
 
 </div>
 
