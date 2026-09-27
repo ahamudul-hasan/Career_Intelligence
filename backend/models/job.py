@@ -11,7 +11,7 @@ class Job(db.Model):
     location = db.Column(db.String(255), nullable=True)
     country = db.Column(db.String(10), default="US")
     experience_level = db.Column(db.String(50), nullable=True)
-    source = db.Column(db.String(50), default="adzuna")
+    source = db.Column(db.String(50), default="manual")
     external_id = db.Column(db.String(255), nullable=True)
     job_url = db.Column(db.Text, nullable=True)
     raw_description = db.Column(db.Text, nullable=True)
@@ -30,6 +30,8 @@ class Job(db.Model):
         return {
             "id": self.id,
             "career_role_id": self.career_role_id,
+            "career_role_name": self.career_role.name if self.career_role else None,
+            "category": self.career_role.category if self.career_role else None,
             "title": self.title,
             "company": self.company,
             "location": self.location,
@@ -38,6 +40,7 @@ class Job(db.Model):
             "source": self.source,
             "external_id": self.external_id,
             "job_url": self.job_url,
+            "raw_description": self.raw_description,
             "cleaned_description": self.cleaned_description,
             "posted_date": self.posted_date.isoformat() if self.posted_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
