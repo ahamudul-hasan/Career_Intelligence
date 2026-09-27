@@ -19,13 +19,6 @@ An AI-powered intelligence platform that analyzes live tech job postings, calcul
 
 <br />
 
-[Explore Features](#-key-features) •
-[Architecture](#-system-architecture) •
-[Quickstart](#-quickstart-guide) •
-[API Docs](#-api-reference) •
-[Database Schema](#-database-architecture) •
-[Implementation Status](#-implementation-status)
-
 </div>
 
 ---
