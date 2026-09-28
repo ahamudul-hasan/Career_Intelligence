@@ -16,6 +16,7 @@ from backend.models.roadmap import (
 from backend.services.analysis_service import AnalysisService
 from backend.services.profile_service import ProfileService
 from backend.ai.roadmap_generator import RoadmapGenerator
+from backend.ai.project_recommender import ProjectRecommender
 from backend.utils.normalization import normalize_skill_name
 
 logger = logging.getLogger(__name__)
@@ -102,7 +103,8 @@ class RoadmapService:
                 project = Project(
                     title=proj_schema.title,
                     description=proj_schema.description,
-                    difficulty=proj_schema.difficulty if proj_schema.difficulty in ["beginner", "intermediate", "advanced"] else "intermediate"
+                    difficulty=proj_schema.difficulty if proj_schema.difficulty in ["beginner", "intermediate", "advanced"] else "intermediate",
+                    skills_demonstrated=proj_schema.skills_demonstrated or [],
                 )
                 db.session.add(project)
                 db.session.flush()
@@ -114,6 +116,48 @@ class RoadmapService:
                     phase_id=phase.id,
                 )
                 db.session.add(roadmap_proj)
+
+        # Section 45 / Phase 12 Guardrail: Ensure EVERY high-priority gap has at least one concrete project attached
+        high_gaps = [g for g in gaps if g.get("gap_priority", "").upper() == "HIGH"]
+        covered_skills = set()
+        for rp in roadmap.roadmap_projects:
+            if rp.project and rp.project.skills_demonstrated:
+                for s in rp.project.skills_demonstrated:
+                    covered_skills.add(s.lower())
+
+        first_phase = roadmap.phases[0] if roadmap.phases else None
+
+        for gap in high_gaps:
+            s_name = gap.get("skill_name", "")
+            if s_name.lower() not in covered_skills:
+                # Find the phase containing this skill, or attach to first phase
+                target_phase = first_phase
+                for p in roadmap.phases:
+                    if any(item.skill and item.skill.name.lower() == s_name.lower() for item in p.items):
+                        target_phase = p
+                        break
+
+                proj_suggestion = ProjectRecommender._build_single_project_for_skill(
+                    skill_name=s_name,
+                    target_career=career.name,
+                    difficulty="intermediate"
+                )
+                gap_project = Project(
+                    title=proj_suggestion.title,
+                    description=proj_suggestion.description,
+                    difficulty=proj_suggestion.difficulty,
+                    skills_demonstrated=proj_suggestion.skills_demonstrated,
+                )
+                db.session.add(gap_project)
+                db.session.flush()
+
+                rp_gap = RoadmapProject(
+                    roadmap_id=roadmap.id,
+                    project_id=gap_project.id,
+                    phase_id=target_phase.id if target_phase else None,
+                )
+                db.session.add(rp_gap)
+                covered_skills.add(s_name.lower())
 
         db.session.commit()
         return roadmap
@@ -132,3 +176,56 @@ class RoadmapService:
             .limit(limit)
             .all()
         )
+
+    @staticmethod
+    def get_all_projects(
+        career_role_id: Optional[int] = None,
+        roadmap_id: Optional[int] = None,
+        difficulty: Optional[str] = None,
+        limit: int = 50
+    ) -> List[Project]:
+        """Query projects with optional filtering by career, roadmap, and difficulty."""
+        query = Project.query
+        if roadmap_id:
+            query = query.join(RoadmapProject, Project.id == RoadmapProject.project_id).filter(
+                RoadmapProject.roadmap_id == roadmap_id
+            )
+        elif career_role_id:
+            query = query.join(RoadmapProject, Project.id == RoadmapProject.project_id).join(
+                Roadmap, RoadmapProject.roadmap_id == Roadmap.id
+            ).filter(Roadmap.career_role_id == career_role_id)
+
+        if difficulty:
+            query = query.filter(Project.difficulty == difficulty)
+
+        return query.order_by(Project.id.desc()).limit(limit).all()
+
+    @staticmethod
+    def get_project_by_id(project_id: int) -> Optional[Project]:
+        """Retrieve a single project by ID."""
+        return db.session.get(Project, project_id)
+
+    @staticmethod
+    def recommend_projects_for_gaps(
+        career_role_id: int,
+        user_id: int = 1,
+        desired_difficulty: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """Generate high-impact portfolio project recommendations targeting skill gaps on demand."""
+        career = db.session.get(CareerRole, career_role_id)
+        career_name = career.name if career else "Software Engineer"
+
+        user_skills_list = UserSkill.query.filter_by(user_id=user_id).all()
+        user_skills_map = {us.skill_id: us.proficiency for us in user_skills_list}
+
+        frequencies = AnalysisService.calculate_skill_frequencies(career_role_id=career_role_id)
+        gaps = AnalysisService.calculate_skill_gaps(frequencies, user_skills_map)
+
+        suggestions = ProjectRecommender.recommend_projects_for_gaps(
+            target_career=career_name,
+            gaps=gaps,
+            user_skills=[us.to_dict() for us in user_skills_list],
+            desired_difficulty=desired_difficulty
+        )
+
+        return [s.to_dict() for s in suggestions]

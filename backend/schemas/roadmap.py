@@ -1,6 +1,6 @@
 """Pydantic schemas for LangChain structured roadmap generation and API contracts (Phase 11 / Sections 43, 48)."""
 from datetime import datetime
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from pydantic import BaseModel, Field
 
 # Structured AI Generator Schemas
@@ -8,6 +8,7 @@ class RoadmapProjectSchema(BaseModel):
     title: str = Field(description="Title of the resume-worthy portfolio project")
     description: str = Field(description="Detailed project description explaining what to build and skills demonstrated")
     difficulty: str = Field(default="intermediate", description="Project difficulty level: 'beginner', 'intermediate', or 'advanced'")
+    skills_demonstrated: List[str] = Field(default_factory=list, description="Skills proven by building this project")
 
 class RoadmapItemSchema(BaseModel):
     skill_name: str = Field(description="Exact name of the skill targeted by this learning item")
@@ -35,11 +36,19 @@ class RoadmapGenerateRequest(BaseModel):
     analysis_id: Optional[int] = None
     available_time: Optional[str] = "10-15 hours/week"
 
+class ProjectRecommendationRequest(BaseModel):
+    career_role_id: Optional[int] = None
+    target_career: Optional[str] = None
+    gaps: Optional[List[Dict[str, Any]]] = None
+    user_id: Optional[int] = 1
+    difficulty: Optional[str] = None
+
 class ProjectResponse(BaseModel):
     id: int
     title: str
     description: str
     difficulty: str
+    skills_demonstrated: List[str] = []
     created_at: Optional[datetime] = None
 
 class RoadmapItemResponse(BaseModel):

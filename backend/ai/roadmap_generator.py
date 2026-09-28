@@ -110,8 +110,9 @@ class RoadmapGenerator:
                 items=items,
                 project=RoadmapProjectSchema(
                     title=f"Production-Ready {top_skill} Microservice Application",
-                    description=f"Architect and deploy a containerized service demonstrating proficiency in {', '.join(g['skill_name'] for g in high_gaps[:3])}.",
-                    difficulty="intermediate"
+                    description=f"Architect and deploy a containerized service demonstrating proficiency in {top_skill}.",
+                    difficulty="intermediate",
+                    skills_demonstrated=[top_skill]
                 )
             ))
             phase_num += 1
@@ -136,7 +137,8 @@ class RoadmapGenerator:
                 project=RoadmapProjectSchema(
                     title="Distributed Data Pipeline & API Integration",
                     description=f"Build an automated data ingestion and caching layer utilizing {', '.join(g['skill_name'] for g in target_gaps[:2])}.",
-                    difficulty="intermediate"
+                    difficulty="intermediate",
+                    skills_demonstrated=[g['skill_name'] for g in target_gaps[:2]]
                 )
             ))
             phase_num += 1
@@ -160,7 +162,8 @@ class RoadmapGenerator:
                 project=RoadmapProjectSchema(
                     title="Full-Stack Capstone with Automated CI/CD & Monitoring",
                     description="Deliver an end-to-end cloud-native system with comprehensive testing, containerization, and Prometheus/Grafana metrics.",
-                    difficulty="advanced"
+                    difficulty="advanced",
+                    skills_demonstrated=[g["skill_name"] for g in low_gaps[:2]]
                 )
             ))
 

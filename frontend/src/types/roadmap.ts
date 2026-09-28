@@ -6,6 +6,16 @@ export interface RoadmapProjectItem {
   title: string;
   description: string;
   difficulty: 'beginner' | 'intermediate' | 'advanced';
+  skills_demonstrated?: string[];
+}
+
+export interface Project {
+  id: number;
+  title: string;
+  description: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
+  skills_demonstrated: string[];
+  created_at?: string;
 }
 
 export interface RoadmapItem {

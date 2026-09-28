@@ -105,6 +105,7 @@ class Project(db.Model):
     title = db.Column(db.String(255), nullable=False)
     description = db.Column(db.Text, nullable=False)
     difficulty = db.Column(db.Enum("beginner", "intermediate", "advanced", name="difficulty_levels"), default="intermediate")
+    skills_demonstrated = db.Column(db.JSON, nullable=True, default=list)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     roadmap_projects = db.relationship("RoadmapProject", back_populates="project", cascade="all, delete-orphan")
@@ -115,6 +116,7 @@ class Project(db.Model):
             "title": self.title,
             "description": self.description,
             "difficulty": self.difficulty,
+            "skills_demonstrated": self.skills_demonstrated or [],
             "created_at": self.created_at.isoformat() if self.created_at else None,
         }
 
@@ -139,4 +141,5 @@ class RoadmapProject(db.Model):
             "title": self.project.title if self.project else None,
             "description": self.project.description if self.project else None,
             "difficulty": self.project.difficulty if self.project else "intermediate",
+            "skills_demonstrated": (self.project.skills_demonstrated if self.project else []) or [],
         }

@@ -62,3 +62,34 @@ Available Learning Time: {available_time or '10-15 hours/week'}
 
 Generate a personalized, progressive learning roadmap that bridges these specific gaps. Format your response strictly according to the requested JSON schema.
 """
+
+PROJECT_RECOMMENDATION_SYSTEM_PROMPT = """You are a Principal Software Architect, Staff Technical Interviewer, and Career Portfolio Strategist.
+Your objective is to generate rigorous, highly practical, and candidate-differentiating portfolio project recommendations (Section 45).
+Each recommended project must directly resolve identified skill gaps for a candidate seeking a specific target career role.
+
+CRITICAL INSTRUCTIONS & GUARDRAILS (Section 45):
+1. **PRODUCTION-GRADE SCOPE**: Prohibit toy applications (e.g., NO basic to-do lists, simple calculator scripts, or trivial tutorials). Projects must emulate real-world systems with realistic architectures (e.g., asynchronous task queues, relational/NoSQL persistence, containerization, API contracts, automated testing, or observability).
+2. **GAP TARGETING**: Every recommended project must explicitly focus on bridging one or more identified skill gaps (especially High-Priority and Medium-Priority gaps).
+3. **RESUME IMPACT**: Include a clear explanation of how the project demonstrates competency to hiring managers and what specific technical artifacts (e.g. GitHub repo, live demo, Dockerfile, benchmark results) make it stand out.
+4. **SKILLS DEMONSTRATED**: Explicitly list all technical skills, libraries, tools, and architectures demonstrated by completing the project.
+5. **REALISTIC DIFFICULTY**: Accurately label difficulty as "beginner", "intermediate", or "advanced" based on architectural complexity.
+"""
+
+def build_project_recommendation_user_prompt(
+    target_career: str,
+    gaps: List[Dict[str, Any]],
+    user_skills: Optional[List[Dict[str, Any]]] = None,
+    desired_difficulty: Optional[str] = None
+) -> str:
+    """Build structured user prompt for project recommendations targeting specific skill gaps (Section 45)."""
+    difficulty_clause = f"\nTarget Difficulty Level: {desired_difficulty}" if desired_difficulty else ""
+    return f"""Target Career Role: {target_career}{difficulty_clause}
+
+--- IDENTIFIED SKILL GAPS REQUIRING PROJECT EVIDENCE (High & Medium Priority) ---
+{json.dumps(gaps, indent=2)}
+
+--- CURRENT USER CAPABILITIES & FOUNDATIONAL SKILLS ---
+{json.dumps(user_skills or [], indent=2)}
+
+For each major skill gap, recommend a concrete, production-oriented portfolio project that provides undeniable proof of competence on the candidate's resume and in technical interviews. Format your response strictly according to the requested JSON schema.
+"""

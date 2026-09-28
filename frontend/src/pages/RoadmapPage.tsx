@@ -371,16 +371,37 @@ const PhaseTimelineCard: React.FC<PhaseTimelineCardProps> = ({
           )}
         </div>
 
-        {/* Milestone Items List */}
+        {/* Milestone Items List with Inline Recommended Projects (Section 45) */}
         <div className="space-y-4">
-          {phase.items?.map((item, iIdx) => (
-            <RoadmapItemCard key={item.id || iIdx} item={item} />
-          ))}
+          {phase.items?.map((item, iIdx) => {
+            // Find project demonstrating this item's skill
+            const matchedProject = (phase.projects || []).find((p) =>
+              p.skills_demonstrated?.some(
+                (s) => s.toLowerCase() === item.skill_name?.toLowerCase()
+              ) ||
+              (item.skill_name &&
+                `${p.title} ${p.description}`.toLowerCase().includes(item.skill_name.toLowerCase()))
+            );
+
+            return (
+              <RoadmapItemCard
+                key={item.id || iIdx}
+                item={item}
+                recommendedProject={matchedProject}
+              />
+            );
+          })}
         </div>
 
         {/* Phase Projects (Section 45 Hands-On Projects) */}
         {phase.projects && phase.projects.length > 0 && (
-          <div className="pt-2">
+          <div className="pt-2 space-y-3">
+            <div className="flex items-center gap-2">
+              <FolderGit2 className="w-4 h-4 text-purple-400" />
+              <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-purple-400">
+                Phase Capstone Portfolio Projects (Section 45)
+              </h4>
+            </div>
             {phase.projects.map((proj, pIdx) => (
               <PhaseProjectCard key={proj.id || pIdx} project={proj} />
             ))}
@@ -393,11 +414,12 @@ const PhaseTimelineCard: React.FC<PhaseTimelineCardProps> = ({
 
 interface RoadmapItemCardProps {
   item: RoadmapItem;
+  recommendedProject?: RoadmapProjectItem;
 }
 
-const RoadmapItemCard: React.FC<RoadmapItemCardProps> = ({ item }) => {
+const RoadmapItemCard: React.FC<RoadmapItemCardProps> = ({ item, recommendedProject }) => {
   return (
-    <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-4 hover:border-slate-700/80 transition-all space-y-2">
+    <div className="rounded-xl border border-slate-800/80 bg-slate-950/60 p-4 hover:border-slate-700/80 transition-all space-y-2.5">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <div className="flex items-center gap-2.5">
           <div className="p-1 rounded bg-cyan-500/10 text-cyan-400">
@@ -427,6 +449,21 @@ const RoadmapItemCard: React.FC<RoadmapItemCardProps> = ({ item }) => {
           <Sparkles className="w-3 h-3 text-cyan-400 shrink-0 mt-0.5" />
           <span>
             <strong className="text-white">Why This Matters:</strong> {item.importance_reason}
+          </span>
+        </div>
+      )}
+
+      {/* Inline Recommended Project Attached to this Skill Milestone (Section 45 / Phase 12) */}
+      {recommendedProject && (
+        <div className="ml-6 p-2.5 rounded-lg bg-purple-950/30 border border-purple-800/40 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <FolderGit2 className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+            <span className="text-purple-200">
+              <strong className="text-white">Recommended Capstone:</strong> {recommendedProject.title}
+            </span>
+          </div>
+          <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded bg-purple-900/60 text-purple-300 border border-purple-700/60 shrink-0 self-start sm:self-auto">
+            {recommendedProject.difficulty}
           </span>
         </div>
       )}
@@ -467,6 +504,21 @@ const PhaseProjectCard: React.FC<PhaseProjectCardProps> = ({ project }) => {
       </div>
 
       <p className="text-xs text-slate-300 leading-relaxed">{project.description}</p>
+
+      {/* Skills Demonstrated Tag Pills (Section 45) */}
+      {project.skills_demonstrated && project.skills_demonstrated.length > 0 && (
+        <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-purple-900/30">
+          <span className="text-[10px] text-slate-400 font-semibold mr-1">Skills Demonstrated:</span>
+          {project.skills_demonstrated.map((s, idx) => (
+            <span
+              key={idx}
+              className="px-2 py-0.5 rounded text-[10px] font-mono font-medium bg-purple-950/80 text-purple-300 border border-purple-700/40"
+            >
+              {s}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
