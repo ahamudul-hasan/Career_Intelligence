@@ -1,36 +1,44 @@
-export interface Project {
+export interface RoadmapProjectItem {
   id: number;
+  roadmap_id: number;
+  project_id: number;
+  phase_id?: number | null;
   title: string;
   description: string;
-  difficulty?: 'beginner' | 'intermediate' | 'advanced';
-  created_at?: string;
+  difficulty: 'beginner' | 'intermediate' | 'advanced';
 }
 
 export interface RoadmapItem {
   id: number;
-  skill_id?: number;
+  phase_id: number;
+  skill_id?: number | null;
+  skill_name?: string | null;
+  skill_category?: string | null;
   title: string;
-  description?: string;
-  order_index: number;
-  estimated_hours?: number;
-  status: string;
-  projects?: Project[];
+  description?: string | null;
+  importance_reason?: string | null;
+  estimated_hours: number;
 }
 
 export interface RoadmapPhase {
   id: number;
+  roadmap_id: number;
+  phase_number: number;
   title: string;
-  description?: string;
-  phase_order: number;
+  estimated_duration?: string | null;
   items: RoadmapItem[];
+  projects?: RoadmapProjectItem[];
 }
 
 export interface Roadmap {
   id: number;
   user_id: number;
   career_role_id: number;
+  career_role_name?: string | null;
+  analysis_id?: number | null;
   title: string;
-  summary?: string;
+  summary?: string | null;
   created_at?: string;
   phases: RoadmapPhase[];
+  projects?: RoadmapProjectItem[];
 }
