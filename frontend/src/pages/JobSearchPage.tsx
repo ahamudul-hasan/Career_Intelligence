@@ -24,6 +24,7 @@ import {
 import { useJobs } from '../hooks/useJobs';
 import { useCareers } from '../hooks/useCareers';
 import { getJobMatch } from '../services/jobService';
+import { SearchableSelect } from '../components/SearchableSelect';
 import type { Job, JobImportPayload, JobSearchCriteria, JobMatchResult } from '../types/job';
 
 const SAMPLE_JOB_TEXT = `<h3>Backend Software Engineer (Python / Distributed Systems)</h3>
@@ -246,7 +247,7 @@ export const JobSearchPage: React.FC = () => {
       </div>
 
       {/* Ingestion Panel Card */}
-      <div className="rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md p-6 sm:p-8 mb-8 shadow-xl shadow-black/20">
+      <div className="relative z-30 rounded-3xl bg-slate-900/60 border border-slate-800/80 backdrop-blur-md p-6 sm:p-8 mb-8 shadow-xl shadow-black/20">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-800/80 pb-5 mb-6">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-cyan-500/10 border border-cyan-500/20 flex items-center justify-center text-cyan-400">
@@ -308,17 +309,17 @@ export const JobSearchPage: React.FC = () => {
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   Career Role Target
                 </label>
-                <select
+                <SearchableSelect
+                  options={careers.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                    category: c.category,
+                  }))}
                   value={searchCareerId}
-                  onChange={(e) => setSearchCareerId(parseInt(e.target.value, 10))}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-cyan-500/50"
-                >
-                  {careers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.category})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSearchCareerId(Number(val))}
+                  placeholder="-- Search or select career role --"
+                  searchPlaceholder="Search career role (e.g. DevOps, Frontend)..."
+                />
               </div>
 
               <div>
@@ -403,17 +404,17 @@ export const JobSearchPage: React.FC = () => {
                 <label className="block text-xs font-medium text-slate-300 mb-1.5">
                   Target Career Role
                 </label>
-                <select
+                <SearchableSelect
+                  options={careers.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                    category: c.category,
+                  }))}
                   value={fileCareerId}
-                  onChange={(e) => setFileCareerId(parseInt(e.target.value, 10))}
-                  className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-cyan-500/50"
-                >
-                  {careers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.category})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setFileCareerId(Number(val))}
+                  placeholder="-- Search or select career role --"
+                  searchPlaceholder="Search career role..."
+                />
               </div>
 
               <div>
@@ -480,17 +481,17 @@ export const JobSearchPage: React.FC = () => {
                 <label className="block text-xs font-semibold text-slate-300 mb-1">
                   Target Career Role *
                 </label>
-                <select
+                <SearchableSelect
+                  options={careers.map((c) => ({
+                    value: c.id,
+                    label: c.name,
+                    category: c.category,
+                  }))}
                   value={manualCareerId}
-                  onChange={(e) => setManualCareerId(parseInt(e.target.value, 10))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-200 focus:outline-none focus:border-cyan-500"
-                >
-                  {careers.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name} ({c.category})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setManualCareerId(Number(val))}
+                  placeholder="-- Search or select career role --"
+                  searchPlaceholder="Search career role..."
+                />
               </div>
 
               <div>
@@ -664,7 +665,7 @@ export const JobSearchPage: React.FC = () => {
       )}
 
       {/* Stored Jobs Management Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+      <div className="relative z-20 flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
         <div>
           <h2 className="text-xl font-bold text-white tracking-tight flex items-center gap-2">
             <span>Stored Job Postings</span>
@@ -693,18 +694,22 @@ export const JobSearchPage: React.FC = () => {
           {/* Career Filter */}
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
-            <select
+            <SearchableSelect
+              className="w-56"
+              options={[
+                { value: '', label: 'All Career Roles' },
+                ...careers.map((c) => ({
+                  value: c.id,
+                  label: c.name,
+                  category: c.category,
+                })),
+              ]}
               value={selectedCareerRoleId || ''}
-              onChange={(e) => setSelectedCareerRoleId(e.target.value ? parseInt(e.target.value, 10) : null)}
-              className="px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-slate-200 text-xs focus:outline-none focus:border-cyan-500/50"
-            >
-              <option value="">All Career Roles</option>
-              {careers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.name} ({c.category})
-                </option>
-              ))}
-            </select>
+              onChange={(val) => setSelectedCareerRoleId(val ? Number(val) : null)}
+              placeholder="All Career Roles"
+              searchPlaceholder="Filter career role..."
+              allowClear={true}
+            />
           </div>
 
           {/* Search Bar */}

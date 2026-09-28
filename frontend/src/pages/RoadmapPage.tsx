@@ -15,6 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 import { useRoadmap } from '../hooks/useRoadmap';
 import { useCareers } from '../hooks/useCareers';
+import { SearchableSelect } from '../components/SearchableSelect';
 import type { RoadmapPhase, RoadmapItem, RoadmapProjectItem } from '../types/roadmap';
 
 export const RoadmapPage: React.FC = () => {
@@ -120,17 +121,17 @@ export const RoadmapPage: React.FC = () => {
             <Briefcase className="w-3.5 h-3.5 text-cyan-400" />
             Target Career Role
           </label>
-          <select
+          <SearchableSelect
+            options={careers.map((career) => ({
+              value: career.id,
+              label: career.name,
+              category: career.category,
+            }))}
             value={careerRoleId || ''}
-            onChange={(e) => setCareerRoleId(Number(e.target.value))}
-            className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer"
-          >
-            {careers.map((career) => (
-              <option key={career.id} value={career.id}>
-                {career.name} ({career.category})
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setCareerRoleId(Number(val))}
+            placeholder="-- Select or search career role --"
+            searchPlaceholder="Search career role..."
+          />
         </div>
 
         {/* Time Commitment */}

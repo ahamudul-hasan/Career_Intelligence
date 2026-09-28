@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useProfile } from '../hooks/useProfile';
 import { PROFICIENCY_LABELS } from '../types/profile';
+import { SearchableSelect } from '../components/SearchableSelect';
 
 const PROFICIENCY_COLORS: Record<number, { bg: string; text: string; border: string; bar: string }> = {
   0: { bg: 'bg-slate-500/10', text: 'text-slate-400', border: 'border-slate-700', bar: '#64748b' },
@@ -97,10 +98,20 @@ export const ProfilePage: React.FC = () => {
     }
   };
 
-  // Filter available skills that are not already added
+  // Filter available skills that are not already added, with deduplication
   const unaddedSkills = useMemo(() => {
     const existingIds = new Set(skills.map((s) => s.skill_id));
-    return availableSkills.filter((s) => !existingIds.has(s.id));
+    const existingNames = new Set(skills.map((s) => (s.skill_name || '').toLowerCase().trim()));
+    const seenNames = new Set<string>();
+
+    return availableSkills.filter((s) => {
+      if (existingIds.has(s.id)) return false;
+      const cleanName = (s.name || '').toLowerCase().trim();
+      if (existingNames.has(cleanName)) return false;
+      if (seenNames.has(cleanName)) return false;
+      seenNames.add(cleanName);
+      return true;
+    });
   }, [availableSkills, skills]);
 
   // Categories present in cataloged skills
@@ -291,7 +302,7 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Add Skill Panel */}
-      <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-950/80 p-6 backdrop-blur-xl shadow-2xl">
+      <div className="relative z-30 rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-slate-900/90 via-slate-900/60 to-slate-950/80 p-6 backdrop-blur-xl shadow-2xl">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800 mb-6">
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
@@ -335,23 +346,23 @@ export const ProfilePage: React.FC = () => {
         <form onSubmit={handleAddSkillSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
             {/* Skill Selector / Input */}
-            <div className="md:col-span-6">
+            <div className="md:col-span-6 relative z-40">
               <label className="block text-xs font-medium text-slate-400 mb-1.5">
                 {inputMode === 'picker' ? 'Select Standardized Skill' : 'Enter Skill or Alias'}
               </label>
               {inputMode === 'picker' ? (
-                <select
+                <SearchableSelect
+                  options={unaddedSkills.map((sk) => ({
+                    value: String(sk.id),
+                    label: sk.name,
+                    category: sk.category || 'General',
+                  }))}
                   value={selectedSkillId}
-                  onChange={(e) => setSelectedSkillId(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3.5 py-2.5 text-sm focus:outline-none focus:border-cyan-500 cursor-pointer"
-                >
-                  <option value="">-- Choose a skill from catalog ({unaddedSkills.length} available) --</option>
-                  {unaddedSkills.map((sk) => (
-                    <option key={sk.id} value={sk.id}>
-                      {sk.name} ({sk.category || 'General'})
-                    </option>
-                  ))}
-                </select>
+                  onChange={(val) => setSelectedSkillId(String(val))}
+                  placeholder={`-- Choose or search a skill (${unaddedSkills.length} available) --`}
+                  searchPlaceholder="Type to filter skills or scroll list..."
+                  allowClear={true}
+                />
               ) : (
                 <input
                   type="text"
@@ -419,7 +430,7 @@ export const ProfilePage: React.FC = () => {
       </div>
 
       {/* Cataloged Skills Section */}
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl shadow-xl overflow-hidden">
+      <div className="relative z-10 rounded-2xl border border-slate-800 bg-slate-900/40 backdrop-blur-xl shadow-xl overflow-hidden">
         {/* Table Filters & Search */}
         <div className="p-6 border-b border-slate-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

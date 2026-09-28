@@ -29,6 +29,7 @@ import {
 } from 'lucide-react';
 import { useAnalysis } from '../hooks/useAnalysis';
 import { useCareers } from '../hooks/useCareers';
+import { SearchableSelect } from '../components/SearchableSelect';
 import type { SkillFrequency } from '../types/skill';
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -228,17 +229,17 @@ export const MarketAnalysisPage: React.FC = () => {
             <Briefcase className="w-3.5 h-3.5 text-cyan-400" />
             Target Career Role
           </label>
-          <select
+          <SearchableSelect
+            options={careers.map((career) => ({
+              value: career.id,
+              label: career.name,
+              category: career.category,
+            }))}
             value={careerRoleId || ''}
-            onChange={(e) => setCareerRoleId(Number(e.target.value))}
-            className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-3.5 py-2 text-sm focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500 cursor-pointer"
-          >
-            {careers.map((career) => (
-              <option key={career.id} value={career.id}>
-                {career.name} ({career.category})
-              </option>
-            ))}
-          </select>
+            onChange={(val) => setCareerRoleId(Number(val))}
+            placeholder="-- Select or search career role --"
+            searchPlaceholder="Search career role..."
+          />
         </div>
 
         {/* Location Filter */}
