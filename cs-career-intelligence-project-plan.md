@@ -246,3 +246,5 @@ If every arrow in that chain works with real data (not fixtures), your MVP is do
 - **Never let the LLM invent numbers.** Percentages, counts, and gap classifications are always Python/SQL-calculated; the LLM only explains/generates roadmap text and project ideas from numbers you hand it.
 - **Career-agnostic by construction.** If you ever catch yourself writing an `if career == "AI Engineer"` branch, stop — the career taxonomy and job dataset should be the only thing that changes per career, not the code path.
 - **Two users, two roadmaps.** Periodically re-run Phase 11 with two very different skill profiles against the same market data — if the roadmaps look the same, something's wrong (Section 11).
+
+---
