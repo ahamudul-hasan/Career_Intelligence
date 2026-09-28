@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Job, JobListResponse, JobImportPayload, JobSearchCriteria, JobSearchResponse } from '../types/job';
+import type { Job, JobListResponse, JobImportPayload, JobSearchCriteria, JobSearchResponse, JobSkillItem } from '../types/job';
 
 export const getJobs = async (
   careerRoleId?: number,
@@ -49,5 +49,35 @@ export const uploadJobFile = async (
 
 export const deleteJob = async (id: number): Promise<{ message: string }> => {
   const response = await api.delete<{ message: string }>(`/api/jobs/${id}`);
+  return response.data;
+};
+
+export const extractJobSkills = async (jobId: number): Promise<{ message: string; job_id: number; skills: JobSkillItem[] }> => {
+  const response = await api.post<{ message: string; job_id: number; skills: JobSkillItem[] }>(`/api/jobs/${jobId}/extract`);
+  return response.data;
+};
+
+export const batchExtractSkills = async (
+  careerRoleId: number,
+  limit: number = 30,
+  reextract: boolean = false
+): Promise<{
+  message: string;
+  career_role_id: number;
+  career_role_name: string;
+  jobs_processed: number;
+  total_skills_extracted: number;
+}> => {
+  const response = await api.post<{
+    message: string;
+    career_role_id: number;
+    career_role_name: string;
+    jobs_processed: number;
+    total_skills_extracted: number;
+  }>('/api/skills/extract', {
+    career_role_id: careerRoleId,
+    limit,
+    reextract,
+  });
   return response.data;
 };

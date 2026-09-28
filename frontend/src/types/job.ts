@@ -15,6 +15,16 @@ export interface Job {
   cleaned_description?: string;
   posted_date?: string;
   created_at?: string;
+  skills?: JobSkillItem[];
+}
+
+export interface JobSkillItem {
+  id: number;
+  name: string;
+  normalized_name: string;
+  category?: string;
+  importance: 'required' | 'preferred' | 'nice_to_have';
+  confidence: number;
 }
 
 export interface JobListResponse {

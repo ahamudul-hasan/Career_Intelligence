@@ -44,4 +44,15 @@ class Job(db.Model):
             "cleaned_description": self.cleaned_description,
             "posted_date": self.posted_date.isoformat() if self.posted_date else None,
             "created_at": self.created_at.isoformat() if self.created_at else None,
+            "skills": [
+                {
+                    "id": js.skill.id,
+                    "name": js.skill.name,
+                    "normalized_name": js.skill.normalized_name,
+                    "category": js.category or js.skill.category,
+                    "importance": js.importance,
+                    "confidence": js.confidence,
+                }
+                for js in self.skills
+            ] if self.skills else []
         }

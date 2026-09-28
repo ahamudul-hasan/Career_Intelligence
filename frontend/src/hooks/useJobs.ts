@@ -1,5 +1,14 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getJobs, getJobById, importJob, deleteJob, searchJobs, uploadJobFile } from '../services/jobService';
+import { 
+  getJobs, 
+  getJobById, 
+  importJob, 
+  deleteJob, 
+  searchJobs, 
+  uploadJobFile,
+  extractJobSkills,
+  batchExtractSkills
+} from '../services/jobService';
 import type { Job, JobImportPayload, JobSearchCriteria, JobSearchResponse } from '../types/job';
 
 export interface UseJobsReturn {
@@ -20,6 +29,8 @@ export interface UseJobsReturn {
   handleImport: (payload: JobImportPayload) => Promise<boolean>;
   handleSearch: (criteria: JobSearchCriteria) => Promise<JobSearchResponse | null>;
   handleUpload: (file: File, careerRoleId: number, experienceLevel?: string) => Promise<JobSearchResponse | null>;
+  handleExtractSkills: (jobId: number) => Promise<boolean>;
+  handleBatchExtractSkills: (careerRoleId: number, limit?: number, reextract?: boolean) => Promise<{ jobs_processed: number; total_skills_extracted: number } | null>;
   handleDelete: (id: number) => Promise<boolean>;
   refetch: () => Promise<void>;
   clearSearchResult: () => void;
@@ -163,6 +174,44 @@ export const useJobs = (initialCareerRoleId: number | null = null): UseJobsRetur
     }
   }, []);
 
+  const handleExtractSkills = useCallback(async (jobId: number): Promise<boolean> => {
+    try {
+      const res = await extractJobSkills(jobId);
+      // Update job in state with newly extracted skills
+      setJobs((prev) =>
+        prev.map((j) => (j.id === jobId ? { ...j, skills: res.skills } : j))
+      );
+      if (selectedJob?.id === jobId) {
+        setSelectedJob((prev) => (prev ? { ...prev, skills: res.skills } : prev));
+      }
+      return true;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to extract skills';
+      setError(message);
+      return false;
+    }
+  }, [selectedJob]);
+
+  const handleBatchExtractSkills = useCallback(async (
+    careerRoleId: number,
+    limit: number = 30,
+    reextract: boolean = false
+  ): Promise<{ jobs_processed: number; total_skills_extracted: number } | null> => {
+    setSearching(true);
+    setError(null);
+    try {
+      const res = await batchExtractSkills(careerRoleId, limit, reextract);
+      await fetchJobs();
+      return res;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Batch extraction failed';
+      setError(message);
+      return null;
+    } finally {
+      setSearching(false);
+    }
+  }, [fetchJobs]);
+
   const handleDelete = useCallback(async (id: number): Promise<boolean> => {
     try {
       await deleteJob(id);
@@ -201,6 +250,8 @@ export const useJobs = (initialCareerRoleId: number | null = null): UseJobsRetur
     handleImport,
     handleSearch,
     handleUpload,
+    handleExtractSkills,
+    handleBatchExtractSkills,
     handleDelete,
     refetch: fetchJobs,
     clearSearchResult,

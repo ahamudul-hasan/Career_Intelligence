@@ -25,7 +25,7 @@ class Config:
     
     # Gemini AI
     GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-2.5-flash")
+    GEMINI_MODEL = os.getenv("GEMINI_MODEL", "gemini-flash-latest")
     
     # Job Providers
     ADZUNA_APP_ID = os.getenv("ADZUNA_APP_ID")

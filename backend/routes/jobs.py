@@ -188,3 +188,31 @@ def delete_job(job_id):
     if not success:
         return jsonify({"error": "NOT_FOUND", "message": f"Job {job_id} not found"}), 404
     return jsonify({"message": f"Job {job_id} deleted successfully"}), 200
+
+@jobs_bp.route("/<int:job_id>/extract", methods=["POST"])
+def extract_job_skills(job_id):
+    """Extract skills for a single stored job (Phase 6)."""
+    job = JobService.get_job_by_id(job_id)
+    if not job:
+        return jsonify({"error": "NOT_FOUND", "message": f"Job {job_id} not found"}), 404
+
+    from backend.services.skill_service import SkillService
+    skills = SkillService.extract_and_store_job_skills(job)
+    return jsonify({
+        "message": f"Extracted {len(skills)} skills for job {job_id}",
+        "job_id": job.id,
+        "skills": SkillService.get_job_skills(job.id)
+    }), 200
+
+@jobs_bp.route("/<int:job_id>/skills", methods=["GET"])
+def get_job_skills(job_id):
+    """Retrieve extracted skills for a specific job."""
+    from backend.services.skill_service import SkillService
+    job = JobService.get_job_by_id(job_id)
+    if not job:
+        return jsonify({"error": "NOT_FOUND", "message": f"Job {job_id} not found"}), 404
+
+    return jsonify({
+        "job_id": job.id,
+        "skills": SkillService.get_job_skills(job.id)
+    }), 200

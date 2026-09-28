@@ -15,7 +15,9 @@ import {
   Globe,
   Database,
   CheckCircle2,
-  SlidersHorizontal
+  SlidersHorizontal,
+  Tag,
+  Zap
 } from 'lucide-react';
 import { useJobs } from '../hooks/useJobs';
 import { useCareers } from '../hooks/useCareers';
@@ -56,6 +58,8 @@ export const JobSearchPage: React.FC = () => {
     handleImport,
     handleSearch,
     handleUpload,
+    handleExtractSkills,
+    handleBatchExtractSkills,
     handleDelete,
     refetch,
     clearSearchResult,
@@ -84,6 +88,11 @@ export const JobSearchPage: React.FC = () => {
   const [manualExperience, setManualExperience] = useState<string>('entry_level');
   const [manualDescription, setManualDescription] = useState<string>(SAMPLE_JOB_TEXT);
   const [manualFormError, setManualFormError] = useState<string | null>(null);
+
+  // Extraction State
+  const [extractingJobId, setExtractingJobId] = useState<number | null>(null);
+  const [batchExtracting, setBatchExtracting] = useState<boolean>(false);
+  const [extractionBanner, setExtractionBanner] = useState<string | null>(null);
 
   // Trigger Live Adzuna Ingestion
   const onTriggerAdzunaSearch = async (e: React.FormEvent) => {
@@ -144,7 +153,6 @@ export const JobSearchPage: React.FC = () => {
   };
 
   const handleQuickBackendSearch = () => {
-    // 2 is Backend Developer
     setSearchCareerId(2);
     setSearchLocation('USA');
     setSearchExperience('entry_level');
@@ -158,6 +166,31 @@ export const JobSearchPage: React.FC = () => {
     });
   };
 
+  const onExtractSingleJob = async (jobId: number) => {
+    setExtractingJobId(jobId);
+    try {
+      await handleExtractSkills(jobId);
+    } finally {
+      setExtractingJobId(null);
+    }
+  };
+
+  const onBatchExtract = async () => {
+    const targetId = selectedCareerRoleId || 2;
+    setBatchExtracting(true);
+    setExtractionBanner(null);
+    try {
+      const res = await handleBatchExtractSkills(targetId, 30, false);
+      if (res) {
+        setExtractionBanner(
+          `AI Skill Extraction Complete: Processed ${res.jobs_processed} jobs, extracting ${res.total_skills_extracted} structured skills into MySQL.`
+        );
+      }
+    } finally {
+      setBatchExtracting(false);
+    }
+  };
+
   return (
     <div className="py-8 max-w-7xl mx-auto pb-24">
       {/* Top Header */}
@@ -165,20 +198,20 @@ export const JobSearchPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium mb-3">
             <Globe className="w-3.5 h-3.5" />
-            <span>Phase 4: Job Provider Integration & Live Ingestion</span>
+            <span>Phases 4–6: Adzuna Ingestion, Text Cleaning & AI Skill Extraction</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Job Market Ingestion & Search
           </h1>
           <p className="text-slate-400 text-sm mt-1 max-w-2xl leading-relaxed">
-            Query real-time job openings from external providers (Adzuna), ingest multi-job documents, or paste manual descriptions into MySQL with automated deduplication and HTML text cleaning.
+            Query real-time job openings from external providers (Adzuna), sanitize HTML text, and run LangChain Gemini structured extraction to populate skill requirements in MySQL.
           </p>
         </div>
 
         <div className="flex items-center gap-3">
           <button
             onClick={refetch}
-            disabled={loading || searching}
+            disabled={loading || searching || batchExtracting}
             className="inline-flex items-center gap-2 px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 hover:border-cyan-500/50 text-slate-300 hover:text-white transition-all disabled:opacity-50 text-xs font-semibold cursor-pointer"
             title="Refresh jobs from MySQL"
           >
@@ -560,7 +593,33 @@ export const JobSearchPage: React.FC = () => {
 
           <button
             onClick={clearSearchResult}
-            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors"
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
+
+      {/* Batch Extraction Banner */}
+      {extractionBanner && (
+        <div className="mb-8 p-5 rounded-2xl bg-purple-950/40 border border-purple-500/30 flex items-start justify-between gap-4 animate-in fade-in slide-in-from-top-2">
+          <div className="flex items-start gap-3">
+            <div className="p-2 rounded-xl bg-purple-500/20 text-purple-400 border border-purple-500/30 shrink-0 mt-0.5">
+              <Zap className="w-5 h-5" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>AI Skill Extraction Complete (Phase 6)</span>
+              </h3>
+              <p className="text-xs text-slate-300 mt-1">
+                {extractionBanner}
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => setExtractionBanner(null)}
+            className="text-slate-400 hover:text-white p-1 rounded-lg hover:bg-slate-800 transition-colors cursor-pointer"
           >
             <X className="w-4 h-4" />
           </button>
@@ -590,12 +649,23 @@ export const JobSearchPage: React.FC = () => {
             </span>
           </h2>
           <p className="text-xs text-slate-400 mt-0.5">
-            Real postings stored in MySQL database for skill extraction
+            Real postings stored in MySQL database with AI extracted requirements
           </p>
         </div>
 
         {/* Filter and Stats Controls */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
+          {/* AI Batch Extraction Button */}
+          <button
+            onClick={onBatchExtract}
+            disabled={batchExtracting || loading}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/20 active:scale-95 disabled:opacity-50 transition-all cursor-pointer whitespace-nowrap"
+            title="Run LangChain skill extraction on jobs for this career role"
+          >
+            <Sparkles className={`w-3.5 h-3.5 ${batchExtracting ? 'animate-spin' : ''}`} />
+            <span>{batchExtracting ? 'Extracting Skills...' : 'Extract All Skills (AI)'}</span>
+          </button>
+
           {/* Career Filter */}
           <div className="flex items-center gap-2">
             <SlidersHorizontal className="w-3.5 h-3.5 text-slate-400" />
@@ -664,9 +734,9 @@ export const JobSearchPage: React.FC = () => {
           {jobs.map((job) => (
             <div
               key={job.id}
-              className="p-5 sm:p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/70 transition-all flex flex-col md:flex-row md:items-center justify-between gap-4 group"
+              className="p-5 sm:p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 hover:border-slate-700 hover:bg-slate-900/70 transition-all flex flex-col md:flex-row md:items-start justify-between gap-4 group"
             >
-              <div className="space-y-2 flex-1 min-w-0">
+              <div className="space-y-2.5 flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className={`text-[10px] font-mono uppercase px-2 py-0.5 rounded border ${
                     job.source === 'adzuna' 
@@ -734,6 +804,50 @@ export const JobSearchPage: React.FC = () => {
                 <p className="text-xs text-slate-400 line-clamp-2 leading-relaxed">
                   {job.cleaned_description}
                 </p>
+
+                {/* Extracted Skills Badges (Phase 6) */}
+                <div className="pt-1">
+                  {job.skills && job.skills.length > 0 ? (
+                    <div className="flex items-center gap-1.5 flex-wrap">
+                      <div className="flex items-center gap-1 text-[11px] text-purple-400 font-medium mr-1">
+                        <Tag className="w-3 h-3" />
+                        <span>Extracted:</span>
+                      </div>
+                      {job.skills.slice(0, 7).map((skill) => (
+                        <span
+                          key={skill.id}
+                          className={`text-[10px] font-mono px-2 py-0.5 rounded-md border flex items-center gap-1 ${
+                            skill.importance === 'required'
+                              ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/30'
+                              : 'bg-purple-500/10 text-purple-300 border-purple-500/30'
+                          }`}
+                          title={`${skill.category || 'Skill'} • ${skill.importance} • Confidence ${(skill.confidence * 100).toFixed(0)}%`}
+                        >
+                          <span>{skill.name}</span>
+                          <span className={`text-[8px] uppercase tracking-wider px-1 rounded ${
+                            skill.importance === 'required' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-purple-500/20 text-purple-300'
+                          }`}>
+                            {skill.importance === 'required' ? 'Req' : 'Pref'}
+                          </span>
+                        </span>
+                      ))}
+                      {job.skills.length > 7 && (
+                        <span className="text-[10px] font-mono text-slate-500 px-1.5 py-0.5 rounded bg-slate-800/80">
+                          +{job.skills.length - 7} more
+                        </span>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => onExtractSingleJob(job.id)}
+                      disabled={extractingJobId === job.id}
+                      className="inline-flex items-center gap-1.5 text-[11px] text-purple-400 hover:text-purple-300 font-medium cursor-pointer transition-colors bg-purple-500/10 border border-purple-500/20 px-2.5 py-1 rounded-lg"
+                    >
+                      <Sparkles className={`w-3 h-3 ${extractingJobId === job.id ? 'animate-spin' : ''}`} />
+                      <span>{extractingJobId === job.id ? 'Extracting with Gemini...' : 'Extract Skills with AI'}</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* Action Buttons */}
@@ -814,6 +928,60 @@ export const JobSearchPage: React.FC = () => {
               </div>
             </div>
 
+            {/* Extracted Skills Section in Modal */}
+            <div className="mb-4 p-4 rounded-xl bg-slate-950/70 border border-slate-800">
+              <div className="flex items-center justify-between mb-2.5">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-purple-400" />
+                  <h4 className="text-xs font-bold text-white uppercase tracking-wider">
+                    Extracted Skills ({selectedJob.skills?.length || 0})
+                  </h4>
+                </div>
+                {(!selectedJob.skills || selectedJob.skills.length === 0) && (
+                  <button
+                    onClick={() => onExtractSingleJob(selectedJob.id)}
+                    disabled={extractingJobId === selectedJob.id}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-semibold bg-purple-600 hover:bg-purple-500 text-white transition-all cursor-pointer"
+                  >
+                    <Sparkles className={`w-3 h-3 ${extractingJobId === selectedJob.id ? 'animate-spin' : ''}`} />
+                    <span>{extractingJobId === selectedJob.id ? 'Extracting...' : 'Extract Skills Now'}</span>
+                  </button>
+                )}
+              </div>
+
+              {selectedJob.skills && selectedJob.skills.length > 0 ? (
+                <div className="flex flex-wrap gap-2 max-h-36 overflow-y-auto pr-1">
+                  {selectedJob.skills.map((skill) => (
+                    <div
+                      key={skill.id}
+                      className="px-2.5 py-1 rounded-lg bg-slate-900 border border-slate-800 flex items-center gap-2"
+                    >
+                      <span className="text-xs font-semibold text-slate-200">
+                        {skill.name}
+                      </span>
+                      <span className="text-[10px] font-mono text-slate-400">
+                        {skill.category || 'Skill'}
+                      </span>
+                      <span className={`text-[9px] font-mono uppercase px-1.5 py-0.5 rounded ${
+                        skill.importance === 'required'
+                          ? 'bg-emerald-500/20 text-emerald-300'
+                          : 'bg-purple-500/20 text-purple-300'
+                      }`}>
+                        {skill.importance}
+                      </span>
+                      <span className="text-[9px] font-mono text-cyan-400">
+                        {(skill.confidence * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-slate-400 italic">
+                  Skills haven't been extracted for this posting yet. Click 'Extract Skills Now' to run LangChain AI analysis.
+                </p>
+              )}
+            </div>
+
             {/* Description Tab Toggle */}
             <div className="flex items-center gap-2 mb-3 border-b border-slate-800 pb-2">
               <button
@@ -848,7 +1016,7 @@ export const JobSearchPage: React.FC = () => {
             {/* Modal Footer */}
             <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-800">
               <span className="text-[11px] text-slate-500 font-mono">
-                Stored in MySQL `jobs` table
+                Stored in MySQL `jobs` and `job_skills` tables
               </span>
               <button
                 onClick={() => selectJobForView(null)}
