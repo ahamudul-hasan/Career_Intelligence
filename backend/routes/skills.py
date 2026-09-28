@@ -14,12 +14,21 @@ def list_skills():
 
 @skills_bp.route("/top", methods=["GET"])
 def get_top_skills():
-    """Get top skills by frequency for a career_role_id."""
+    """Get top skills by frequency for a career_role_id (Phase 8)."""
     career_role_id = request.args.get("career_role_id", type=int)
     if not career_role_id:
         return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id query parameter is required"}), 400
 
-    frequencies = AnalysisService.calculate_skill_frequencies(career_role_id)
+    location = request.args.get("location", type=str)
+    experience_level = request.args.get("experience_level", type=str)
+    limit = request.args.get("limit", default=50, type=int)
+
+    frequencies = AnalysisService.calculate_skill_frequencies(
+        career_role_id=career_role_id,
+        location=location,
+        experience_level=experience_level,
+        limit=limit
+    )
     return jsonify(frequencies), 200
 
 @skills_bp.route("/extract", methods=["POST"])

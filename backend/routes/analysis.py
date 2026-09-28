@@ -1,4 +1,4 @@
-"""Market analysis and skill gap routes."""
+"""Market analysis and skill gap routes (Phase 8 / Sections 7, 40, 49)."""
 from flask import Blueprint, jsonify, request
 from backend.models.analysis import Analysis
 from backend.models.user import UserSkill
@@ -6,10 +6,46 @@ from backend.services.analysis_service import AnalysisService
 
 analysis_bp = Blueprint("analysis", __name__, url_prefix="/api/analysis")
 
+@analysis_bp.route("", methods=["GET"])
+def list_analyses():
+    """Retrieve market analysis snapshots history."""
+    career_role_id = request.args.get("career_role_id", type=int)
+    limit = request.args.get("limit", default=20, type=int)
+    analyses = AnalysisService.get_analyses_history(career_role_id=career_role_id, limit=limit)
+    return jsonify([a.to_dict() for a in analyses]), 200
+
+@analysis_bp.route("", methods=["POST"])
+def create_analysis():
+    """Run and persist a deterministic market analysis snapshot (Phase 8 / Section 49, 56)."""
+    payload = request.get_json() or {}
+    career_role_id = payload.get("career_role_id")
+    if not career_role_id:
+        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
+
+    target_location = payload.get("target_location", "All")
+    experience_level = payload.get("experience_level", "All")
+    sources = payload.get("sources", "adzuna")
+
+    try:
+        result = AnalysisService.create_analysis(
+            career_role_id=int(career_role_id),
+            target_location=target_location,
+            experience_level=experience_level,
+            sources=sources
+        )
+        return jsonify({
+            "message": "Market analysis created successfully",
+            **result
+        }), 201
+    except ValueError as val_err:
+        return jsonify({"error": "NOT_FOUND", "message": str(val_err)}), 404
+    except Exception as exc:
+        return jsonify({"error": "SERVER_ERROR", "message": str(exc)}), 500
+
 @analysis_bp.route("/<int:analysis_id>", methods=["GET"])
 def get_analysis(analysis_id):
     """Get metadata for a specific analysis run."""
-    analysis = Analysis.query.get(analysis_id)
+    analysis = AnalysisService.get_analysis_by_id(analysis_id)
     if not analysis:
         return jsonify({"error": "NOT_FOUND", "message": f"Analysis {analysis_id} not found"}), 404
     return jsonify(analysis.to_dict()), 200
@@ -17,18 +53,22 @@ def get_analysis(analysis_id):
 @analysis_bp.route("/<int:analysis_id>/skills", methods=["GET"])
 def get_analysis_skills(analysis_id):
     """Get calculated market skill frequencies for an analysis."""
-    analysis = Analysis.query.get(analysis_id)
+    analysis = AnalysisService.get_analysis_by_id(analysis_id)
     if not analysis:
         return jsonify({"error": "NOT_FOUND", "message": f"Analysis {analysis_id} not found"}), 404
 
-    frequencies = AnalysisService.calculate_skill_frequencies(analysis.career_role_id)
+    frequencies = AnalysisService.calculate_skill_frequencies(
+        career_role_id=analysis.career_role_id,
+        location=analysis.target_location if analysis.target_location != "All" else None,
+        experience_level=analysis.experience_level if analysis.experience_level != "All" else None
+    )
     return jsonify(frequencies), 200
 
 @analysis_bp.route("/<int:analysis_id>/gaps", methods=["GET"])
 def get_analysis_gaps(analysis_id):
-    """Compute deterministic skill gaps for a user against an analysis."""
+    """Compute deterministic skill gaps for a user against an analysis (Section 50)."""
     user_id = request.args.get("user_id", default=1, type=int)
-    analysis = Analysis.query.get(analysis_id)
+    analysis = AnalysisService.get_analysis_by_id(analysis_id)
     if not analysis:
         return jsonify({"error": "NOT_FOUND", "message": f"Analysis {analysis_id} not found"}), 404
 
