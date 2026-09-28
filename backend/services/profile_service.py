@@ -35,13 +35,15 @@ class ProfileService:
         return user
 
     @staticmethod
-    def update_profile(user_id: int = 1, name: Optional[str] = None, email: Optional[str] = None) -> User:
-        """Update user profile metadata."""
+    def update_profile(user_id: int = 1, name: Optional[str] = None, email: Optional[str] = None, password: Optional[str] = None) -> User:
+        """Update user profile metadata with secure password hashing."""
         user = ProfileService.get_or_create_default_user(user_id=user_id)
         if name:
             user.name = name.strip()
         if email:
             user.email = email.strip().lower()
+        if password:
+            user.set_password(password)
         db.session.commit()
         return user
 

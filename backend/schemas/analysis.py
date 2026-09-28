@@ -6,8 +6,9 @@ from backend.schemas.skill import SkillFrequencyItem
 
 class AnalysisCreateRequest(BaseModel):
     career_role_id: int
-    target_location: Optional[str] = "US"
-    experience_level: Optional[str] = "entry_level"
+    target_location: Optional[str] = "All"
+    experience_level: Optional[str] = "All"
+    sources: Optional[str] = "adzuna"
 
 class AnalysisResponse(BaseModel):
     id: int

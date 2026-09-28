@@ -2,26 +2,22 @@
 from flask import Blueprint, jsonify, request
 from backend.services.roadmap_service import RoadmapService
 
+from backend.schemas.roadmap import RoadmapGenerateRequest
+
 roadmap_bp = Blueprint("roadmap", __name__, url_prefix="/api/roadmap")
 
 @roadmap_bp.route("/generate", methods=["POST"])
 def generate_roadmap():
-    """Generate a personalized learning roadmap based on target career and deterministic skill gaps."""
+    """Generate a personalized learning roadmap based on target career and deterministic skill gaps with Pydantic validation."""
     payload = request.get_json() or {}
-    career_role_id = payload.get("career_role_id")
-    if not career_role_id:
-        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
-
-    user_id = payload.get("user_id", 1)
-    analysis_id = payload.get("analysis_id")
-    available_time = payload.get("available_time", "10-15 hours/week")
+    req = RoadmapGenerateRequest(**payload)
 
     try:
         roadmap = RoadmapService.generate_and_save_roadmap(
-            career_role_id=int(career_role_id),
-            user_id=int(user_id),
-            analysis_id=int(analysis_id) if analysis_id else None,
-            available_time=str(available_time)
+            career_role_id=req.career_role_id,
+            user_id=req.user_id or 1,
+            analysis_id=req.analysis_id,
+            available_time=req.available_time or "10-15 hours/week"
         )
         return jsonify({
             "message": "Personalized career roadmap generated successfully",

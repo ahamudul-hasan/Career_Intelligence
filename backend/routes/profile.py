@@ -1,6 +1,11 @@
 """User profile and skills routes (Phase 9 / Sections 8, 28, 41)."""
 from flask import Blueprint, jsonify, request
 from backend.services.profile_service import ProfileService, PROFICIENCY_LEVELS
+from backend.schemas.user import (
+    UserProfileUpdateRequest,
+    UserSkillAddRequest,
+    UserSkillUpdateRequest
+)
 
 profile_bp = Blueprint("profile", __name__, url_prefix="/api/profile")
 
@@ -13,14 +18,18 @@ def get_profile():
 
 @profile_bp.route("", methods=["PUT"])
 def update_profile():
-    """Update active user profile (name, email)."""
+    """Update active user profile (name, email, password) with Pydantic validation."""
     user_id = request.args.get("user_id", default=1, type=int)
     payload = request.get_json() or {}
-    name = payload.get("name")
-    email = payload.get("email")
+    req = UserProfileUpdateRequest(**payload)
 
     try:
-        user = ProfileService.update_profile(user_id=user_id, name=name, email=email)
+        user = ProfileService.update_profile(
+            user_id=user_id,
+            name=req.name,
+            email=req.email,
+            password=req.password
+        )
         return jsonify({
             "message": "Profile updated successfully",
             "profile": user.to_dict()
@@ -37,15 +46,12 @@ def get_user_skills():
 
 @profile_bp.route("/skills", methods=["POST"])
 def add_user_skill():
-    """Add or update a skill with proficiency level (0-4) in user's profile."""
+    """Add or update a skill with proficiency level (0-4) in user's profile with Pydantic validation."""
     user_id = request.args.get("user_id", default=1, type=int)
     payload = request.get_json() or {}
+    req = UserSkillAddRequest(**payload)
 
-    skill_id = payload.get("skill_id")
-    skill_name = payload.get("skill_name")
-    proficiency = payload.get("proficiency", 0)
-
-    if not skill_id and not skill_name:
+    if not req.skill_id and not req.skill_name:
         return jsonify({
             "error": "VALIDATION_ERROR",
             "message": "Either skill_id or skill_name is required."
@@ -54,9 +60,9 @@ def add_user_skill():
     try:
         user_skill = ProfileService.add_or_update_user_skill(
             user_id=user_id,
-            skill_id=int(skill_id) if skill_id is not None else None,
-            skill_name=str(skill_name) if skill_name is not None else None,
-            proficiency=proficiency
+            skill_id=req.skill_id,
+            skill_name=req.skill_name,
+            proficiency=req.proficiency
         )
         return jsonify({
             "message": "Skill added to profile successfully",
@@ -69,24 +75,22 @@ def add_user_skill():
 
 @profile_bp.route("/skills", methods=["PUT"])
 def update_user_skill_body():
-    """Update skill proficiency via request body."""
+    """Update skill proficiency via request body with Pydantic validation."""
     user_id = request.args.get("user_id", default=1, type=int)
     payload = request.get_json() or {}
+    req = UserSkillUpdateRequest(**payload)
 
-    skill_id = payload.get("skill_id")
-    proficiency = payload.get("proficiency")
-
-    if skill_id is None or proficiency is None:
+    if req.skill_id is None:
         return jsonify({
             "error": "VALIDATION_ERROR",
-            "message": "skill_id and proficiency are required."
+            "message": "skill_id is required."
         }), 400
 
     try:
         user_skill = ProfileService.update_user_skill_proficiency(
             user_id=user_id,
-            skill_id=int(skill_id),
-            proficiency=int(proficiency)
+            skill_id=req.skill_id,
+            proficiency=req.proficiency
         )
         return jsonify({
             "message": "Proficiency updated successfully",
@@ -99,22 +103,16 @@ def update_user_skill_body():
 
 @profile_bp.route("/skills/<int:skill_id>", methods=["PUT"])
 def update_user_skill_param(skill_id):
-    """Update skill proficiency via URL parameter."""
+    """Update skill proficiency via URL parameter with Pydantic validation."""
     user_id = request.args.get("user_id", default=1, type=int)
     payload = request.get_json() or {}
-    proficiency = payload.get("proficiency")
-
-    if proficiency is None:
-        return jsonify({
-            "error": "VALIDATION_ERROR",
-            "message": "proficiency is required in request body."
-        }), 400
+    req = UserSkillUpdateRequest(skill_id=skill_id, **payload)
 
     try:
         user_skill = ProfileService.update_user_skill_proficiency(
             user_id=user_id,
             skill_id=skill_id,
-            proficiency=int(proficiency)
+            proficiency=req.proficiency
         )
         return jsonify({
             "message": "Proficiency updated successfully",

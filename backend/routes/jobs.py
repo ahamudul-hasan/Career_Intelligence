@@ -173,6 +173,9 @@ def upload_jobs():
     if not career_role:
         return jsonify({"error": "NOT_FOUND", "message": f"Career role {career_role_id} not found"}), 404
 
+    from werkzeug.utils import secure_filename
+    safe_filename = secure_filename(file.filename) or "upload.txt"
+
     try:
         raw_bytes = file.read()
         # Max file size: 5MB
@@ -192,7 +195,7 @@ def upload_jobs():
         provider = FileProvider()
         raw_jobs = provider.parse_text_file(
             content=content,
-            filename=file.filename,
+            filename=safe_filename,
             default_career=career_role.name,
             experience=request.form.get("experience_level", "entry_level")
         )

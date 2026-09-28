@@ -111,7 +111,7 @@ def test_proficiency_validation(client):
         "proficiency": 5
     })
     assert res_high.status_code == 400
-    assert "0" in res_high.get_json()["message"] and "4" in res_high.get_json()["message"]
+    assert res_high.get_json()["error"] == "VALIDATION_ERROR"
 
     # Invalid: -1
     res_low = client.post("/api/profile/skills?user_id=1", json={
@@ -119,6 +119,7 @@ def test_proficiency_validation(client):
         "proficiency": -1
     })
     assert res_low.status_code == 400
+    assert res_low.get_json()["error"] == "VALIDATION_ERROR"
 
 def test_remove_user_skill(client, app_context):
     """Verify deleting a skill from user profile."""

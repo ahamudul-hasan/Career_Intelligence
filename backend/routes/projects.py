@@ -2,6 +2,8 @@
 from flask import Blueprint, jsonify, request
 from backend.services.roadmap_service import RoadmapService
 
+from backend.schemas.roadmap import ProjectRecommendationRequest
+
 projects_bp = Blueprint("projects", __name__, url_prefix="/api/projects")
 
 @projects_bp.route("", methods=["GET"])
@@ -30,20 +32,18 @@ def get_project(project_id: int):
 
 @projects_bp.route("/recommend", methods=["POST"])
 def recommend_projects():
-    """On-demand generation of portfolio project suggestions bridging identified skill gaps."""
+    """On-demand generation of portfolio project suggestions bridging identified skill gaps with Pydantic validation."""
     data = request.get_json() or {}
-    career_role_id = data.get("career_role_id")
-    if not career_role_id:
-        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
+    req = ProjectRecommendationRequest(**data)
 
-    user_id = data.get("user_id", 1)
-    difficulty = data.get("difficulty")
+    if not req.career_role_id:
+        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
 
     try:
         suggestions = RoadmapService.recommend_projects_for_gaps(
-            career_role_id=career_role_id,
-            user_id=user_id,
-            desired_difficulty=difficulty
+            career_role_id=req.career_role_id,
+            user_id=req.user_id or 1,
+            desired_difficulty=req.difficulty
         )
         return jsonify({"projects": suggestions, "count": len(suggestions)}), 200
     except Exception as e:

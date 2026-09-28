@@ -4,6 +4,8 @@ from backend.models.skill import Skill
 from backend.services.skill_service import SkillService
 from backend.services.analysis_service import AnalysisService
 
+from backend.schemas.skill import SkillExtractBatchRequest
+
 skills_bp = Blueprint("skills", __name__, url_prefix="/api/skills")
 
 @skills_bp.route("", methods=["GET"])
@@ -33,20 +35,15 @@ def get_top_skills():
 
 @skills_bp.route("/extract", methods=["POST"])
 def batch_extract_skills():
-    """Run batch LangChain skill extraction for all jobs of a career role (Phase 6 / Section 19)."""
+    """Run batch LangChain skill extraction for all jobs of a career role (Phase 6 / Section 19) with Pydantic validation."""
     payload = request.get_json() or {}
-    career_role_id = payload.get("career_role_id")
-    if not career_role_id:
-        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
-
-    limit = payload.get("limit", 50)
-    reextract = payload.get("reextract", False)
+    req = SkillExtractBatchRequest(**payload)
 
     try:
         result = SkillService.extract_skills_for_career(
-            career_role_id=int(career_role_id),
-            limit=int(limit),
-            reextract=bool(reextract)
+            career_role_id=req.career_role_id,
+            limit=req.limit or 50,
+            reextract=bool(req.reextract)
         )
         return jsonify({
             "message": f"Successfully extracted {result['total_skills_extracted']} skills across {result['jobs_processed']} jobs.",

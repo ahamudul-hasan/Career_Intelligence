@@ -30,3 +30,9 @@ class SkillFrequencyItem(BaseModel):
     percentage: float
     required_count: int
     preferred_count: int
+
+class SkillExtractBatchRequest(BaseModel):
+    career_role_id: int
+    limit: Optional[int] = Field(50, ge=1, le=500)
+    reextract: Optional[bool] = False
+

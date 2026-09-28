@@ -1,4 +1,5 @@
 from datetime import datetime
+from werkzeug.security import generate_password_hash, check_password_hash
 from backend.extensions import db
 
 class User(db.Model):
@@ -12,6 +13,16 @@ class User(db.Model):
 
     skills = db.relationship("UserSkill", back_populates="user", cascade="all, delete-orphan")
     roadmaps = db.relationship("Roadmap", back_populates="user", cascade="all, delete-orphan")
+
+    def set_password(self, password: str):
+        """Hash and store a secure salted password."""
+        self.password_hash = generate_password_hash(password)
+
+    def check_password(self, password: str) -> bool:
+        """Verify password against stored salt and hash."""
+        if not self.password_hash:
+            return False
+        return check_password_hash(self.password_hash, password)
 
     def to_dict(self):
         return {

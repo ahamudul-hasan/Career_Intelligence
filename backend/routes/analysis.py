@@ -4,6 +4,8 @@ from backend.models.analysis import Analysis
 from backend.models.user import UserSkill
 from backend.services.analysis_service import AnalysisService
 
+from backend.schemas.analysis import AnalysisCreateRequest
+
 analysis_bp = Blueprint("analysis", __name__, url_prefix="/api/analysis")
 
 @analysis_bp.route("", methods=["GET"])
@@ -16,22 +18,16 @@ def list_analyses():
 
 @analysis_bp.route("", methods=["POST"])
 def create_analysis():
-    """Run and persist a deterministic market analysis snapshot (Phase 8 / Section 49, 56)."""
+    """Run and persist a deterministic market analysis snapshot (Phase 8 / Section 49, 56) with Pydantic validation."""
     payload = request.get_json() or {}
-    career_role_id = payload.get("career_role_id")
-    if not career_role_id:
-        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
-
-    target_location = payload.get("target_location", "All")
-    experience_level = payload.get("experience_level", "All")
-    sources = payload.get("sources", "adzuna")
+    req = AnalysisCreateRequest(**payload)
 
     try:
         result = AnalysisService.create_analysis(
-            career_role_id=int(career_role_id),
-            target_location=target_location,
-            experience_level=experience_level,
-            sources=sources
+            career_role_id=req.career_role_id,
+            target_location=req.target_location or "All",
+            experience_level=req.experience_level or "All",
+            sources=req.sources or "adzuna"
         )
         return jsonify({
             "message": "Market analysis created successfully",
