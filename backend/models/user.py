@@ -18,6 +18,7 @@ class User(db.Model):
             "id": self.id,
             "name": self.name,
             "email": self.email,
+            "created_at": self.created_at.isoformat() if self.created_at else None,
             "skills": [s.to_dict() for s in self.skills]
         }
 
@@ -40,7 +41,11 @@ class UserSkill(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
+            "user_id": self.user_id,
             "skill_id": self.skill_id,
             "skill_name": self.skill.name if self.skill else None,
+            "normalized_name": self.skill.normalized_name if self.skill else None,
+            "category": self.skill.category if self.skill else "General",
             "proficiency": self.proficiency,
+            "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

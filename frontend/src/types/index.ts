@@ -4,3 +4,4 @@ export * from './job';
 export * from './skill';
 export * from './analysis';
 export * from './roadmap';
+export * from './profile';
