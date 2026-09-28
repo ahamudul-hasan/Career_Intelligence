@@ -6,7 +6,7 @@ from backend.extensions import db
 from backend.models.job import Job
 from backend.models.skill import Skill, JobSkill
 from backend.models.career import CareerRole
-from backend.utils.normalization import normalize_skill_name
+from backend.utils.normalization import normalize_skill_name, get_canonical_skill_display
 from backend.ai.skill_extractor import extract_skills_from_text
 
 logger = logging.getLogger(__name__)
@@ -19,18 +19,19 @@ class SkillService:
 
     @staticmethod
     def get_or_create_skill(name: str, category: Optional[str] = None) -> Skill:
-        """Find existing skill by normalized name / name or create a new canonical entry."""
+        """Find existing skill by normalized name / canonical name or create a new canonical entry (Phase 7)."""
         clean_name = name.strip()[:150]
         normalized = normalize_skill_name(clean_name)[:150]
+        canonical = get_canonical_skill_display(clean_name)[:150]
 
         skill = Skill.query.filter(
-            (Skill.normalized_name == normalized) | (Skill.name == clean_name)
+            (Skill.normalized_name == normalized) | (Skill.name == clean_name) | (Skill.name == canonical)
         ).first()
 
         if not skill:
             try:
                 skill = Skill(
-                    name=clean_name,
+                    name=canonical,
                     normalized_name=normalized,
                     category=(category or "Technical")[:100]
                 )
@@ -39,7 +40,7 @@ class SkillService:
             except IntegrityError:
                 db.session.rollback()
                 skill = Skill.query.filter(
-                    (Skill.normalized_name == normalized) | (Skill.name == clean_name)
+                    (Skill.normalized_name == normalized) | (Skill.name == clean_name) | (Skill.name == canonical)
                 ).first()
 
         return skill
