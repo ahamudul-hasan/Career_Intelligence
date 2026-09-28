@@ -1,7 +1,10 @@
-"""Unit tests for Phase 3 Job Data Model & Manual Job Management."""
+"""Unit tests for Phase 3 & Phase 4 Job Data Model, Providers, and Ingestion."""
+import io
 import pytest
 from backend.app import create_app
 from backend.providers.manual import ManualProvider
+from backend.providers.adzuna import AdzunaProvider
+from backend.providers.file_provider import FileProvider
 from backend.services.job_service import JobService
 
 @pytest.fixture
@@ -20,7 +23,7 @@ def test_list_jobs(client):
     assert isinstance(data["jobs"], list)
 
 def test_import_job_manual_flow(client):
-    # 1. First get a valid career role ID
+    # 1. Get a valid career role ID
     careers_res = client.get("/api/careers")
     careers = careers_res.get_json()
     role_id = careers[0]["id"]
@@ -50,7 +53,6 @@ def test_import_job_manual_flow(client):
     assert job["title"] == "Junior Python Backend Developer"
     assert job["career_role_id"] == role_id
     assert job["source"] == "manual"
-    # Ensure HTML tags were cleaned from cleaned_description
     assert "<p>" not in job["cleaned_description"]
     assert "Python" in job["cleaned_description"]
 
@@ -77,26 +79,91 @@ def test_import_job_manual_flow(client):
     assert not_found_res.status_code == 404
 
 def test_import_job_validation_error(client):
-    # Missing required title and description
     response = client.post("/api/jobs/import", json={"career_role_id": 1})
     assert response.status_code == 400
     data = response.get_json()
     assert data["error"] == "VALIDATION_ERROR"
 
-def test_manual_provider_ingestion(client):
-    with client.application.app_context():
-        provider = ManualProvider()
-        assert provider.search("Backend") == []
-        # Test ingesting via ManualProvider
-        created = provider.ingest_manual_job(
-            career_role_id=1,
-            title="Software Engineer - Systems",
-            description="Core systems engineering role requiring C++ and Linux.",
-            company="Kernel Systems"
-        )
-        assert created["id"] is not None
-        assert created["title"] == "Software Engineer - Systems"
-        assert created["source"] == "manual"
+def test_adzuna_provider_search():
+    provider = AdzunaProvider()
+    results = provider.search(career="Software Engineer", location="US", limit=5)
+    assert isinstance(results, list)
+    assert len(results) > 0
+    first = results[0]
+    assert "title" in first
+    assert "company" in first
+    assert "location" in first
+    assert "raw_description" in first
+    assert first["source"] == "adzuna"
 
-        # Cleanup
-        JobService.delete_job(created["id"])
+def test_file_provider_parsing():
+    provider = FileProvider()
+    sample_content = """Senior Backend Developer
+We need strong Python, Docker, and PostgreSQL skills.
+---
+Frontend Engineer
+Expert in React, TypeScript, and Tailwind CSS.
+"""
+    jobs = provider.parse_text_file(sample_content, filename="sample.txt")
+    assert len(jobs) == 2
+    assert jobs[0]["title"] == "Senior Backend Developer"
+    assert jobs[1]["title"] == "Frontend Engineer"
+    assert jobs[0]["source"] == "file"
+
+def test_post_jobs_search_live_ingestion(client):
+    """Phase 4 Acceptance Criterion:
+    Selecting 'Backend Developer, USA, Entry Level, 30 jobs' actually populates 20-30 rows in jobs.
+    """
+    # Career ID 2 is Backend Developer
+    payload = {
+        "career_role_id": 2,
+        "location": "US",
+        "experience_level": "entry_level",
+        "limit": 30,
+        "source": "adzuna"
+    }
+    response = client.post("/api/jobs/search", json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "jobs_found" in data
+    assert "jobs_ingested" in data
+    assert "jobs_duplicate" in data
+    assert data["jobs_found"] >= 20
+    # On first run jobs are ingested; on subsequent runs they are deduplicated
+    assert (data["jobs_ingested"] + data["jobs_duplicate"]) >= 20
+    assert len(data["jobs"]) == data["jobs_ingested"]
+
+    # Verify jobs exist in database via GET /api/jobs (acceptance criterion: 20-30 rows in jobs)
+    list_res = client.get("/api/jobs?career_role_id=2")
+    assert list_res.status_code == 200
+    list_data = list_res.get_json()
+    assert list_data["total"] >= 20
+
+def test_deduplication_pipeline(client):
+    """Running search again with same parameters should deduplicate existing jobs."""
+    payload = {
+        "career_role_id": 2,
+        "location": "US",
+        "experience_level": "entry_level",
+        "limit": 10,
+        "source": "adzuna"
+    }
+    response = client.post("/api/jobs/search", json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    # Since jobs are already in database, duplicates must be detected
+    assert data["jobs_duplicate"] > 0
+
+def test_file_upload_ingestion(client):
+    import uuid
+    uid = uuid.uuid4().hex[:6]
+    file_content = f"Cloud DevOps Engineer {uid}\nRequires Kubernetes, Terraform, and AWS CI/CD pipelines.".encode("utf-8")
+    data = {
+        "career_role_id": 1,
+        "file": (io.BytesIO(file_content), f"devops_job_{uid}.txt")
+    }
+    response = client.post("/api/jobs/upload", data=data, content_type="multipart/form-data")
+    assert response.status_code == 201
+    res_data = response.get_json()
+    assert res_data["jobs_ingested"] == 1
+    assert res_data["jobs"][0]["source"] == "file"

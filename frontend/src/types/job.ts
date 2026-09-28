@@ -38,3 +38,14 @@ export interface JobSearchCriteria {
   limit?: number;
   source?: string;
 }
+
+export interface JobSearchResponse {
+  message: string;
+  career_role_id: number;
+  career_role_name: string;
+  source: string;
+  jobs_found: number;
+  jobs_ingested: number;
+  jobs_duplicate: number;
+  jobs: Job[];
+}

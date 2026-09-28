@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { getJobs, getJobById, importJob, deleteJob } from '../services/jobService';
-import type { Job, JobImportPayload } from '../types/job';
+import { getJobs, getJobById, importJob, deleteJob, searchJobs, uploadJobFile } from '../services/jobService';
+import type { Job, JobImportPayload, JobSearchCriteria, JobSearchResponse } from '../types/job';
 
 export interface UseJobsReturn {
   jobs: Job[];
@@ -8,7 +8,9 @@ export interface UseJobsReturn {
   selectedJob: Job | null;
   loading: boolean;
   importing: boolean;
+  searching: boolean;
   error: string | null;
+  searchResult: JobSearchResponse | null;
   searchQuery: string;
   selectedCareerRoleId: number | null;
   setSearchQuery: (query: string) => void;
@@ -16,8 +18,11 @@ export interface UseJobsReturn {
   selectJobForView: (job: Job | null) => void;
   fetchJobDetail: (id: number) => Promise<void>;
   handleImport: (payload: JobImportPayload) => Promise<boolean>;
+  handleSearch: (criteria: JobSearchCriteria) => Promise<JobSearchResponse | null>;
+  handleUpload: (file: File, careerRoleId: number, experienceLevel?: string) => Promise<JobSearchResponse | null>;
   handleDelete: (id: number) => Promise<boolean>;
   refetch: () => Promise<void>;
+  clearSearchResult: () => void;
 }
 
 export const useJobs = (initialCareerRoleId: number | null = null): UseJobsReturn => {
@@ -26,7 +31,9 @@ export const useJobs = (initialCareerRoleId: number | null = null): UseJobsRetur
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [importing, setImporting] = useState<boolean>(false);
+  const [searching, setSearching] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchResult, setSearchResult] = useState<JobSearchResponse | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCareerRoleId, setSelectedCareerRoleId] = useState<number | null>(initialCareerRoleId);
 
@@ -103,6 +110,59 @@ export const useJobs = (initialCareerRoleId: number | null = null): UseJobsRetur
     }
   }, []);
 
+  const handleSearch = useCallback(async (criteria: JobSearchCriteria): Promise<JobSearchResponse | null> => {
+    setSearching(true);
+    setError(null);
+    try {
+      const res = await searchJobs(criteria);
+      setSearchResult(res);
+      // Prepend newly ingested jobs to the list
+      if (res.jobs && res.jobs.length > 0) {
+        setJobs((prev) => {
+          const newIds = new Set(res.jobs.map((j) => j.id));
+          const filtered = prev.filter((j) => !newIds.has(j.id));
+          return [...res.jobs, ...filtered];
+        });
+        setTotal((prev) => prev + res.jobs_ingested);
+      }
+      return res;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to fetch jobs from provider';
+      setError(message);
+      return null;
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
+  const handleUpload = useCallback(async (
+    file: File,
+    careerRoleId: number,
+    experienceLevel: string = 'entry_level'
+  ): Promise<JobSearchResponse | null> => {
+    setSearching(true);
+    setError(null);
+    try {
+      const res = await uploadJobFile(file, careerRoleId, experienceLevel);
+      setSearchResult(res);
+      if (res.jobs && res.jobs.length > 0) {
+        setJobs((prev) => {
+          const newIds = new Set(res.jobs.map((j) => j.id));
+          const filtered = prev.filter((j) => !newIds.has(j.id));
+          return [...res.jobs, ...filtered];
+        });
+        setTotal((prev) => prev + res.jobs_ingested);
+      }
+      return res;
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Failed to upload and ingest file';
+      setError(message);
+      return null;
+    } finally {
+      setSearching(false);
+    }
+  }, []);
+
   const handleDelete = useCallback(async (id: number): Promise<boolean> => {
     try {
       await deleteJob(id);
@@ -119,13 +179,19 @@ export const useJobs = (initialCareerRoleId: number | null = null): UseJobsRetur
     }
   }, [selectedJob]);
 
+  const clearSearchResult = useCallback(() => {
+    setSearchResult(null);
+  }, []);
+
   return {
     jobs,
     total,
     selectedJob,
     loading,
     importing,
+    searching,
     error,
+    searchResult,
     searchQuery,
     selectedCareerRoleId,
     setSearchQuery,
@@ -133,7 +199,10 @@ export const useJobs = (initialCareerRoleId: number | null = null): UseJobsRetur
     selectJobForView: setSelectedJob,
     fetchJobDetail,
     handleImport,
+    handleSearch,
+    handleUpload,
     handleDelete,
     refetch: fetchJobs,
+    clearSearchResult,
   };
 };

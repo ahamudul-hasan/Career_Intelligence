@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { Job, JobListResponse, JobImportPayload } from '../types/job';
+import type { Job, JobListResponse, JobImportPayload, JobSearchCriteria, JobSearchResponse } from '../types/job';
 
 export const getJobs = async (
   careerRoleId?: number,
@@ -21,6 +21,29 @@ export const getJobById = async (id: number): Promise<Job> => {
 
 export const importJob = async (payload: JobImportPayload): Promise<{ message: string; job: Job }> => {
   const response = await api.post<{ message: string; job: Job }>('/api/jobs/import', payload);
+  return response.data;
+};
+
+export const searchJobs = async (criteria: JobSearchCriteria): Promise<JobSearchResponse> => {
+  const response = await api.post<JobSearchResponse>('/api/jobs/search', criteria);
+  return response.data;
+};
+
+export const uploadJobFile = async (
+  file: File,
+  careerRoleId: number,
+  experienceLevel: string = 'entry_level'
+): Promise<JobSearchResponse> => {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('career_role_id', careerRoleId.toString());
+  formData.append('experience_level', experienceLevel);
+
+  const response = await api.post<JobSearchResponse>('/api/jobs/upload', formData, {
+    headers: {
+      'Content-Type': 'multipart/form-data',
+    },
+  });
   return response.data;
 };
 
