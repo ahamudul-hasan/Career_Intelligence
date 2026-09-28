@@ -47,10 +47,10 @@ export const Footer: React.FC = () => {
             <div className="space-y-2">
               <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 font-mono text-[11px]">
                 <Shield className="w-3.5 h-3.5" />
-                <span>Phase 1 Completed 100%</span>
+                <span>System Operational</span>
               </div>
               <p className="text-slate-500 text-[11px]">
-                React → Flask API round-trip fully operational.
+                React & Flask API round-trip fully operational.
               </p>
             </div>
           </div>
@@ -61,9 +61,9 @@ export const Footer: React.FC = () => {
             &copy; {new Date().getFullYear()} CS Career Intelligence Platform. Built for developers.
           </div>
           <div className="flex items-center gap-4">
-            <span className="hover:text-slate-400 transition-colors">Phase 1: Project Skeleton</span>
+            <span className="hover:text-slate-400 transition-colors">Evidence-Based</span>
             <span>•</span>
-            <span className="hover:text-slate-400 transition-colors">Phase 2: Next</span>
+            <span className="hover:text-slate-400 transition-colors">Deterministic Intelligence</span>
           </div>
         </div>
       </div>

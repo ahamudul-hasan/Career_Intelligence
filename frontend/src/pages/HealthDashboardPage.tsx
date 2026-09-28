@@ -28,7 +28,7 @@ export const HealthDashboardPage: React.FC<HealthDashboardPageProps> = ({
       <div className="text-center max-w-3xl mx-auto mb-12">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium mb-4">
           <Sparkles className="w-3.5 h-3.5" />
-          <span>Phase 1 Full Skeleton Verified</span>
+          <span>Platform Diagnostics & System Status</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
           CS Career & Market <br className="hidden sm:inline" />
@@ -58,40 +58,40 @@ export const HealthDashboardPage: React.FC<HealthDashboardPageProps> = ({
       {/* Architectural Subsystems */}
       <SystemOverview />
 
-      {/* Phase Roadmap Overview */}
+      {/* Platform Core Capabilities */}
       <div className="mt-14 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 sm:p-8">
         <h3 className="text-lg font-bold text-white mb-4 flex items-center gap-2">
           <Layers className="w-5 h-5 text-indigo-400" />
-          <span>Project Implementation Milestones</span>
+          <span>Platform Core Capabilities</span>
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div className="p-4 rounded-xl bg-slate-950/80 border border-emerald-500/30">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-emerald-400">Phase 0: Environment Setup</span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">COMPLETE</span>
+              <span className="font-bold text-emerald-400">Market Data & Ingestion</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-emerald-500/20 text-emerald-300 font-mono">OPERATIONAL</span>
             </div>
             <p className="text-slate-400">
-              API connectivity verified for Adzuna job search, Gemini LLM, and MySQL database.
+              Live job queries via Adzuna and file ingestion, automated HTML text sanitization, and structured skill extraction.
             </p>
           </div>
 
           <div className="p-4 rounded-xl bg-slate-950/80 border border-cyan-500/40 shadow-sm shadow-cyan-500/10">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-cyan-300">Phase 1: Project Skeleton</span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-mono">COMPLETE</span>
+              <span className="font-bold text-cyan-300">Deterministic Analytics</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-cyan-500/20 text-cyan-300 font-mono">OPERATIONAL</span>
             </div>
             <p className="text-slate-400">
-              Section 34 & 35 full folder scaffolding, React Router, Recharts, Alembic migrations, and /api/health round-trip.
+              Zero-hallucination SQL/Python skill demand percentages, canonical synonym normalization, and priority gap mapping.
             </p>
           </div>
 
-          <div className="p-4 rounded-xl bg-slate-950/60 border border-slate-800 opacity-80">
+          <div className="p-4 rounded-xl bg-slate-950/80 border border-purple-500/40 shadow-sm shadow-purple-500/10">
             <div className="flex items-center justify-between mb-2">
-              <span className="font-bold text-slate-300">Phase 2: Career Taxonomy</span>
-              <span className="px-2 py-0.5 rounded text-[10px] bg-indigo-500/20 text-indigo-300 font-mono">NEXT UP</span>
+              <span className="font-bold text-purple-300">Personalized Roadmaps</span>
+              <span className="px-2 py-0.5 rounded text-[10px] bg-purple-500/20 text-purple-300 font-mono">OPERATIONAL</span>
             </div>
             <p className="text-slate-400">
-              Seed career roles into MySQL database and build interactive Career Selection UI.
+              Personalized milestone learning stages tailored to individual skill gaps, paired with resume portfolio capstone projects.
             </p>
           </div>
         </div>

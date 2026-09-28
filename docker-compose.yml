@@ -1,0 +1,76 @@
+version: '3.8'
+
+services:
+  # MySQL 8.0 Database Service
+  mysql:
+    image: mysql:8.0
+    container_name: career_intel_mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: career_intelligence
+      MYSQL_USER: career_user
+      MYSQL_PASSWORD: career_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "career_user", "-pcareer_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - career_network
+
+  # Python Flask Backend Service
+  backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: career_intel_backend
+    restart: unless-stopped
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-change-this-in-production-to-a-secure-random-secret}
+      - DATABASE_URL=mysql+pymysql://career_user:career_password@mysql:3306/career_intelligence?charset=utf8mb4
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_USER=career_user
+      - MYSQL_PASSWORD=career_password
+      - MYSQL_DATABASE=career_intelligence
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - GEMINI_MODEL=${GEMINI_MODEL:-gemini-flash-latest}
+      - ADZUNA_APP_ID=${ADZUNA_APP_ID}
+      - ADZUNA_APP_KEY=${ADZUNA_APP_KEY}
+      - CORS_ORIGINS=http://localhost,http://localhost:80,http://localhost:5173
+    ports:
+      - "5000:5000"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - career_network
+
+  # React 19 Frontend Service (Nginx)
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/Dockerfile
+    container_name: career_intel_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - career_network
+
+volumes:
+  mysql_data:
+    driver: local
+
+networks:
+  career_network:
+    driver: bridge

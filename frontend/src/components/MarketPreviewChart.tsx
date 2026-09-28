@@ -32,7 +32,7 @@ export const MarketPreviewChart: React.FC = () => {
             </h3>
           </div>
           <p className="text-xs text-slate-400 mt-1">
-            Recharts visualization integration for Phase 8 skill frequency calculations
+            Interactive visualization of real-time skill demand frequencies
           </p>
         </div>
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-mono bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">

@@ -222,7 +222,7 @@ export const JobSearchPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium mb-3">
             <Globe className="w-3.5 h-3.5" />
-            <span>Phases 4–6: Adzuna Ingestion, Text Cleaning & AI Skill Extraction</span>
+            <span>Live Job Ingestion, Text Cleaning & AI Skill Extraction</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Job Market Ingestion & Search
@@ -633,7 +633,7 @@ export const JobSearchPage: React.FC = () => {
             </div>
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <span>AI Skill Extraction Complete (Phase 6)</span>
+                <span>AI Skill Extraction Complete</span>
               </h3>
               <p className="text-xs text-slate-300 mt-1">
                 {extractionBanner}

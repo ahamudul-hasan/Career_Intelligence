@@ -63,7 +63,7 @@ export const RoadmapPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-3">
             <Compass className="w-3.5 h-3.5" />
-            <span>Phase 11 — Personalized Learning Roadmap & Phase Timeline</span>
+            <span>Personalized Learning Roadmap & Action Plan</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Personalized Career Roadmap
@@ -185,7 +185,7 @@ export const RoadmapPage: React.FC = () => {
           <div>
             <h3 className="text-xl font-bold text-white">Synthesizing Personalized Roadmap</h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
-              Analyzing verified market demand, mapping Phase 10 skill gaps, and generating structured
+              Analyzing verified market demand, mapping identified skill gaps, and generating structured
               progressive learning milestones with portfolio projects...
             </p>
           </div>
@@ -204,7 +204,7 @@ export const RoadmapPage: React.FC = () => {
             <h3 className="text-xl font-bold text-white">No Active Roadmap Generated</h3>
             <p className="text-xs text-slate-400 max-w-md mx-auto mt-1">
               Click &quot;Generate Tailored Roadmap&quot; above to synthesize an evidence-grounded
-              phase-by-phase learning plan for{' '}
+              step-by-step learning plan for{' '}
               <span className="text-cyan-400 font-semibold">{selectedCareer?.name || 'your target role'}</span>.
             </p>
           </div>
@@ -254,12 +254,12 @@ export const RoadmapPage: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 text-xs">
               <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
                 <span className="text-slate-400 text-[11px] uppercase tracking-wider block mb-1">
-                  Progressive Phases
+                  Curated Stages
                 </span>
                 <div className="text-xl font-bold font-mono text-white">
-                  {activeRoadmap.phases?.length || 0} Phases
+                  {activeRoadmap.phases?.length || 0} Stages
                 </div>
-                <span className="text-[10px] text-slate-400">Section 43 Timeline</span>
+                <span className="text-[10px] text-slate-400">Structured Timeline</span>
               </div>
 
               <div className="p-3 rounded-xl bg-slate-950/50 border border-slate-800">
@@ -311,7 +311,7 @@ export const RoadmapPage: React.FC = () => {
             <div className="flex items-center gap-2">
               <ShieldCheck className="w-4 h-4 text-cyan-400" />
               <span>
-                Section 48 Rigor: Gemini LLM generated strictly using Phase 8/10 deterministic statistics.
+                Evidence-Based Rigor: Generated strictly using empirical market statistics.
                 Zero invented market numbers.
               </span>
             </div>
@@ -348,14 +348,14 @@ const PhaseTimelineCard: React.FC<PhaseTimelineCardProps> = ({
         0{phase.phase_number || phaseIndex + 1}
       </div>
 
-      {/* Phase Container */}
+      {/* Stage Container */}
       <div className="rounded-2xl border border-slate-800/80 bg-slate-900/40 p-6 sm:p-8 backdrop-blur-xl shadow-xl space-y-6">
-        {/* Phase Header */}
+        {/* Stage Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-800/80">
           <div>
             <div className="flex items-center gap-2 mb-1">
               <span className="text-xs font-mono font-bold text-cyan-400 uppercase tracking-wider">
-                Phase {phase.phase_number || phaseIndex + 1}
+                Stage {phase.phase_number || phaseIndex + 1}
               </span>
               <span className="text-slate-600">•</span>
               <span className="text-xs text-slate-400">{phase.items?.length || 0} Milestones</span>
@@ -393,13 +393,13 @@ const PhaseTimelineCard: React.FC<PhaseTimelineCardProps> = ({
           })}
         </div>
 
-        {/* Phase Projects (Section 45 Hands-On Projects) */}
+        {/* Projects (Hands-On Capstone Projects) */}
         {phase.projects && phase.projects.length > 0 && (
           <div className="pt-2 space-y-3">
             <div className="flex items-center gap-2">
               <FolderGit2 className="w-4 h-4 text-purple-400" />
               <h4 className="text-xs font-mono font-bold uppercase tracking-wider text-purple-400">
-                Phase Capstone Portfolio Projects (Section 45)
+                Capstone Portfolio Projects
               </h4>
             </div>
             {phase.projects.map((proj, pIdx) => (
@@ -492,7 +492,7 @@ const PhaseProjectCard: React.FC<PhaseProjectCardProps> = ({ project }) => {
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-bold uppercase tracking-wider text-purple-400">
-                Phase Capstone Portfolio Project
+                Capstone Portfolio Project
               </span>
               <span className={`px-2 py-0.5 rounded text-[10px] font-semibold border capitalize ${diffColors}`}>
                 {project.difficulty}

@@ -78,7 +78,7 @@ export const CareerSelectionPage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-medium mb-3">
             <Briefcase className="w-3.5 h-3.5" />
-            <span>Phase 2: Database-Driven Career Taxonomy</span>
+            <span>Database-Driven Career Taxonomy</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Choose Your Target Career

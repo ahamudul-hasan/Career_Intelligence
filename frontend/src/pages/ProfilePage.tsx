@@ -152,14 +152,14 @@ export const ProfilePage: React.FC = () => {
         <div>
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-xs font-semibold mb-3">
             <User className="w-3.5 h-3.5" />
-            <span>Phase 9 — User Skill Profile & Proficiency Matrix</span>
+            <span>User Skill Profile & Proficiency Matrix</span>
           </div>
           <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
             Personal Skill Profile
           </h1>
           <p className="text-slate-400 text-sm mt-1.5 max-w-2xl">
             Maintain your technical competencies and realistic proficiency levels (None to Expert)
-            to power deterministic skill gap calculations in Phase 10.
+            to power deterministic skill gap calculations and tailored roadmap milestones.
           </p>
         </div>
 
@@ -396,7 +396,7 @@ export const ProfilePage: React.FC = () => {
           <div className="flex items-center justify-between pt-2">
             <div className="text-xs text-slate-400 flex items-center gap-1.5">
               <ShieldCheck className="w-3.5 h-3.5 text-cyan-400" />
-              <span>Section 28 Standard: Values 0–4 drive Gap Priority (High/Med/Low) in Phase 10.</span>
+              <span>Standard Proficiency Scoring: Values 0–4 drive Gap Priority (High / Med / Low).</span>
             </div>
 
             <div className="flex items-center gap-3">
