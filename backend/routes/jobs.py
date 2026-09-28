@@ -150,11 +150,21 @@ def search_jobs():
 
 @jobs_bp.route("/upload", methods=["POST"])
 def upload_jobs():
-    """Upload job descriptions via TXT/document file (FileProvider) (Phase 4)."""
+    """Upload job descriptions via TXT/document file (FileProvider) (Phase 4 / Phase 14)."""
     if "file" not in request.files:
         return jsonify({"error": "NO_FILE", "message": "No file uploaded in form data 'file'"}), 400
 
     file = request.files["file"]
+    if not file.filename or file.filename.strip() == "":
+        return jsonify({"error": "NO_FILE", "message": "No file selected for upload"}), 400
+
+    allowed_extensions = (".txt", ".md", ".json", ".csv", ".pdf")
+    if not file.filename.lower().endswith(allowed_extensions):
+        return jsonify({
+            "error": "UNSUPPORTED_FILE_TYPE",
+            "message": f"Unsupported file type. Only {', '.join(allowed_extensions)} files are supported."
+        }), 400
+
     career_role_id = request.form.get("career_role_id", type=int)
     if not career_role_id:
         return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
@@ -164,14 +174,34 @@ def upload_jobs():
         return jsonify({"error": "NOT_FOUND", "message": f"Career role {career_role_id} not found"}), 404
 
     try:
-        content = file.read().decode("utf-8", errors="replace")
+        raw_bytes = file.read()
+        # Max file size: 5MB
+        if len(raw_bytes) > 5 * 1024 * 1024:
+            return jsonify({
+                "error": "FILE_TOO_LARGE",
+                "message": "File exceeds maximum size limit of 5MB"
+            }), 400
+
+        content = raw_bytes.decode("utf-8", errors="replace")
+        if not content.strip():
+            return jsonify({
+                "error": "EMPTY_FILE",
+                "message": "Uploaded file is empty"
+            }), 400
+
         provider = FileProvider()
         raw_jobs = provider.parse_text_file(
             content=content,
-            filename=file.filename or "uploaded.txt",
+            filename=file.filename,
             default_career=career_role.name,
             experience=request.form.get("experience_level", "entry_level")
         )
+
+        if not raw_jobs:
+            return jsonify({
+                "error": "NO_JOBS_FOUND",
+                "message": "Could not identify any valid job descriptions in the uploaded file. Ensure the file contains job titles and descriptions."
+            }), 422
 
         result = JobService.ingest_jobs_from_provider(
             career_role_id=career_role.id,

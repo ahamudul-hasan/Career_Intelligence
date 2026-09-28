@@ -38,6 +38,10 @@ class FileProvider(JobDataProvider):
 
         jobs: List[Dict[str, Any]] = []
         for idx, section in enumerate(raw_sections, 1):
+            # Guard against garbage or trivial snippets
+            if len(section.strip()) < 50:
+                continue
+
             lines = [l.strip() for l in section.splitlines() if l.strip()]
             title = lines[0] if lines else default_career
             # If the first line is very long, it's probably part of description rather than a title

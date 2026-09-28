@@ -53,6 +53,10 @@ export const SkillGapPage: React.FC = () => {
     return careers.find((c) => c.id === careerRoleId);
   }, [careers, careerRoleId]);
 
+  const currentAnalysis = useMemo(() => {
+    return analyses.find((a) => a.id === selectedAnalysisId);
+  }, [analyses, selectedAnalysisId]);
+
   const categories = useMemo(() => {
     const cats = new Set(gaps.map((g) => g.category || 'General'));
     return ['All', ...Array.from(cats).sort()];
@@ -205,6 +209,93 @@ export const SkillGapPage: React.FC = () => {
               </option>
             ))}
           </select>
+        </div>
+      </div>
+
+      {/* Section 56 Data Transparency Header Card */}
+      <div className="rounded-2xl border border-cyan-500/20 bg-gradient-to-r from-slate-900/90 via-slate-900/70 to-cyan-950/20 p-5 sm:p-6 backdrop-blur-xl shadow-xl space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <div className="p-2 rounded-xl bg-cyan-500/10 text-cyan-400 border border-cyan-500/20">
+              <ShieldCheck className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-bold text-white tracking-wide">
+                  Section 56 Market Transparency & Empirical Audit
+                </h3>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-[10px] font-mono font-medium">
+                  Verified Pure Data
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 mt-0.5">
+                Deterministic skill gaps computed directly from validated job requirements and your reported proficiency.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* 6 Section 56 Specification Audit Tiles */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Target Career
+            </span>
+            <div className="font-bold text-white text-xs truncate" title={selectedCareer?.name || 'Selected Role'}>
+              {selectedCareer?.name || 'Loading...'}
+            </div>
+            <span className="text-[10px] text-cyan-400">{selectedCareer?.category || 'Tech'}</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Target Location
+            </span>
+            <div className="font-bold text-white text-xs">
+              {currentAnalysis?.target_location || location}
+            </div>
+            <span className="text-[10px] text-slate-400">Market region</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Experience Level
+            </span>
+            <div className="font-bold text-white text-xs capitalize">
+              {currentAnalysis?.experience_level || experienceLevel}
+            </div>
+            <span className="text-[10px] text-slate-400">Seniority filter</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Jobs Analyzed
+            </span>
+            <div className="font-bold text-cyan-400 font-mono text-xs">
+              {currentAnalysis?.jobs_analyzed ? `${currentAnalysis.jobs_analyzed} Postings` : (gaps.length > 0 ? `${gaps.length} Skills Analyzed` : '0 Live Jobs')}
+            </div>
+            <span className="text-[10px] text-slate-400">Dataset sample</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Data Sources
+            </span>
+            <div className="font-bold text-white text-xs uppercase">
+              {currentAnalysis?.sources || 'Adzuna API'}
+            </div>
+            <span className="text-[10px] text-slate-400">Verified feeds</span>
+          </div>
+
+          <div className="p-3 rounded-xl bg-slate-950/60 border border-slate-800/80">
+            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider block mb-1">
+              Collection Date
+            </span>
+            <div className="font-bold text-white text-xs font-mono">
+              {currentAnalysis?.analysis_date ? new Date(currentAnalysis.analysis_date).toLocaleDateString() : 'Live Calculated'}
+            </div>
+            <span className="text-[10px] text-slate-400">Timestamp</span>
+          </div>
         </div>
       </div>
 

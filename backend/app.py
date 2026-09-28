@@ -39,6 +39,10 @@ def create_app(config_class=Config):
     app.register_blueprint(profile_bp)
     app.register_blueprint(projects_bp)
 
+    # Register standardized error handlers (Phase 14 / Section 56/57)
+    from backend.utils.errors import register_error_handlers
+    register_error_handlers(app)
+
     return app
 
 # Application instance for flask CLI / WSGI
