@@ -167,3 +167,48 @@ def test_file_upload_ingestion(client):
     res_data = response.get_json()
     assert res_data["jobs_ingested"] == 1
     assert res_data["jobs"][0]["source"] == "file"
+
+def test_messy_html_and_boilerplate_cleaning_on_import(client):
+    """Phase 5 requirement: Messy HTML, scripts, entities, and boilerplate are cleaned before storage."""
+    import uuid
+    uid = uuid.uuid4().hex[:6]
+    messy_html = f"""
+    <style>.ad {{ display: none; }}</style>
+    <div id="job-post-{uid}">
+        <h1>Full Stack Developer \u2014 Python &amp; React ({uid})</h1>
+        <script>window.tracker = true;</script>
+        <p>We are seeking a <strong>talented</strong> engineer to build web apps.</p>
+        <br/><br/>
+        <h3>Requirements:</h3>
+        <ul>
+            <li>Strong skills in <strong>Python</strong> &amp; <strong>FastAPI</strong>.</li>
+            <li>Experience with <em>PostgreSQL</em> and Docker.</li>
+        </ul>
+        <p>Equal Opportunity Employer / Affirmative Action. All qualified applicants will receive consideration for employment without regard to race.</p>
+    </div>
+    """
+    payload = {
+        "career_role_id": 1,
+        "title": f"Full Stack Developer {uid}",
+        "company": "Clean Code Inc.",
+        "location": "Remote",
+        "experience_level": "mid_level",
+        "description": messy_html
+    }
+    response = client.post("/api/jobs/import", json=payload)
+    assert response.status_code == 201
+    job_data = response.get_json()["job"]
+
+    # Verify raw description is preserved
+    assert "<style>" in job_data["raw_description"]
+    assert "<script>" in job_data["raw_description"]
+
+    # Verify cleaned description is stripped and normalized
+    cleaned = job_data["cleaned_description"]
+    assert "<style>" not in cleaned
+    assert "<script>" not in cleaned
+    assert "window.tracker" not in cleaned
+    assert "Equal Opportunity Employer" not in cleaned
+    assert "• Strong skills in Python & FastAPI." in cleaned
+    assert "• Experience with PostgreSQL and Docker." in cleaned
+    assert "-" in cleaned  # em-dash converted
