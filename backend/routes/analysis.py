@@ -75,6 +75,33 @@ def get_analysis_gaps(analysis_id):
     user_skills = UserSkill.query.filter_by(user_id=user_id).all()
     user_skills_map = {us.skill_id: us.proficiency for us in user_skills}
 
-    frequencies = AnalysisService.calculate_skill_frequencies(analysis.career_role_id)
+    frequencies = AnalysisService.calculate_skill_frequencies(
+        career_role_id=analysis.career_role_id,
+        location=analysis.target_location if analysis.target_location != "All" else None,
+        experience_level=analysis.experience_level if analysis.experience_level != "All" else None
+    )
     gaps = AnalysisService.calculate_skill_gaps(frequencies, user_skills_map)
     return jsonify(gaps), 200
+
+@analysis_bp.route("/gaps", methods=["GET"])
+def get_career_gaps_direct():
+    """Compute deterministic skill gaps directly by career_role_id without requiring a snapshot."""
+    career_role_id = request.args.get("career_role_id", type=int)
+    if not career_role_id:
+        return jsonify({"error": "VALIDATION_ERROR", "message": "career_role_id is required"}), 400
+
+    user_id = request.args.get("user_id", default=1, type=int)
+    location = request.args.get("location")
+    experience_level = request.args.get("experience_level")
+
+    user_skills = UserSkill.query.filter_by(user_id=user_id).all()
+    user_skills_map = {us.skill_id: us.proficiency for us in user_skills}
+
+    frequencies = AnalysisService.calculate_skill_frequencies(
+        career_role_id=career_role_id,
+        location=location if location != "All" else None,
+        experience_level=experience_level if experience_level != "All" else None
+    )
+    gaps = AnalysisService.calculate_skill_gaps(frequencies, user_skills_map)
+    return jsonify(gaps), 200
+

@@ -13,9 +13,11 @@ export interface Analysis {
 export interface SkillGap {
   skill_id: number;
   skill_name: string;
+  normalized_name?: string;
   category?: string;
   market_frequency: number;
   user_proficiency: number;
+  user_proficiency_label?: string;
   gap_priority: 'high' | 'medium' | 'low';
   explanation: string;
 }

@@ -129,32 +129,72 @@ class AnalysisService:
 
     @staticmethod
     def calculate_skill_gaps(market_frequencies: List[Dict[str, Any]], user_skills_map: Dict[int, int]) -> List[Dict[str, Any]]:
-        """Deterministic skill gap calculation based on GAP_THRESHOLDS (Section 50)."""
+        """Deterministic skill gap calculation based on GAP_THRESHOLDS (Sections 9, 50).
+        
+        Evaluates the delta between market demand and current user proficiency:
+        - HIGH: Core demand (>=50%) with Novice/Beginner user (<=1)
+        - MEDIUM: High demand (>=50%) with Intermediate user (2) OR Moderate demand (>=25%) with Novice/Beginner (<=1)
+        - LOW: Moderate demand (>=25%) with Intermediate user (2) OR Secondary demand (>=10%) with Novice/Beginner (<=1)
+               OR High demand (>=50%) with Advanced user (3) seeking Expert mastery
+        - SATISFIED / NO GAP: User is Expert (4), or proficiency already exceeds/meets market expectations
+        """
+        proficiency_labels = {
+            0: "None / Novice",
+            1: "Beginner",
+            2: "Intermediate",
+            3: "Advanced",
+            4: "Expert"
+        }
+
+        priority_order = {"high": 0, "medium": 1, "low": 2}
         gaps = []
+
         for item in market_frequencies:
             skill_id = item["skill_id"]
             user_prof = user_skills_map.get(skill_id, 0)
             pct = item["percentage"]
+            user_label = proficiency_labels.get(user_prof, "Novice")
 
+            # Experts have fully mastered this competency — no skill gap
+            if user_prof >= 4:
+                continue
+
+            priority = None
+            explanation = ""
+
+            # 1. High Priority Gap
             if pct >= GAP_THRESHOLDS["HIGH_GAP_MIN_FREQUENCY"] and user_prof <= GAP_THRESHOLDS["HIGH_GAP_MAX_PROFICIENCY"]:
                 priority = "high"
-                explanation = f"Demanded by {pct}% of jobs in the market. Current proficiency is beginner or none."
-            elif pct >= GAP_THRESHOLDS["MEDIUM_GAP_MIN_FREQUENCY"] and user_prof <= GAP_THRESHOLDS["MEDIUM_GAP_MAX_PROFICIENCY"]:
+                explanation = f"Demanded by {pct}% of jobs in the market. Current proficiency is {user_label} (Level {user_prof}). Critical core competency to prioritize."
+            
+            # 2. Medium Priority Gap
+            elif (pct >= GAP_THRESHOLDS["HIGH_GAP_MIN_FREQUENCY"] and user_prof == 2) or \
+                 (pct >= GAP_THRESHOLDS["MEDIUM_GAP_MIN_FREQUENCY"] and user_prof <= GAP_THRESHOLDS["HIGH_GAP_MAX_PROFICIENCY"]):
                 priority = "medium"
-                explanation = f"Appears in {pct}% of postings. Building higher fluency will increase hireability."
-            elif pct >= GAP_THRESHOLDS["LOW_GAP_MIN_FREQUENCY"]:
+                explanation = f"Appears in {pct}% of job postings. Current proficiency is {user_label} (Level {user_prof}). Leveling up will significantly improve candidate competitiveness."
+            
+            # 3. Low Priority Gap
+            elif (pct >= GAP_THRESHOLDS["MEDIUM_GAP_MIN_FREQUENCY"] and user_prof == 2) or \
+                 (pct >= GAP_THRESHOLDS["LOW_GAP_MIN_FREQUENCY"] and user_prof <= GAP_THRESHOLDS["HIGH_GAP_MAX_PROFICIENCY"]) or \
+                 (pct >= GAP_THRESHOLDS["HIGH_GAP_MIN_FREQUENCY"] and user_prof == 3):
                 priority = "low"
-                explanation = f"Valuable secondary skill found in {pct}% of jobs."
+                explanation = f"Found in {pct}% of jobs. Current proficiency is {user_label} (Level {user_prof}). Beneficial secondary skill for broader career opportunities."
             else:
                 continue
 
             gaps.append({
                 "skill_id": skill_id,
                 "skill_name": item["skill_name"],
-                "category": item["category"],
+                "normalized_name": item.get("normalized_name", item["skill_name"].lower()),
+                "category": item.get("category", "General"),
                 "market_frequency": pct,
                 "user_proficiency": user_prof,
+                "user_proficiency_label": user_label,
                 "gap_priority": priority,
                 "explanation": explanation
             })
+
+        # Sort gaps by priority (high -> medium -> low), then by market_frequency descending
+        gaps.sort(key=lambda g: (priority_order[g["gap_priority"]], -g["market_frequency"]))
         return gaps
+

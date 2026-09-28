@@ -83,3 +83,24 @@ export const getAnalysisGaps = async (
   });
   return response.data;
 };
+
+export const getCareerGapsDirect = async (
+  careerRoleId: number,
+  userId: number = 1,
+  location?: string,
+  experienceLevel?: string
+): Promise<SkillGap[]> => {
+  const params: Record<string, string | number> = {
+    career_role_id: careerRoleId,
+    user_id: userId,
+  };
+  if (location && location !== 'All') {
+    params.location = location;
+  }
+  if (experienceLevel && experienceLevel !== 'All') {
+    params.experience_level = experienceLevel;
+  }
+  const response = await api.get<SkillGap[]>('/api/analysis/gaps', { params });
+  return response.data;
+};
+
