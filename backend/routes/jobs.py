@@ -3,6 +3,7 @@ from flask import Blueprint, jsonify, request
 from pydantic import ValidationError
 from backend.services.job_service import JobService
 from backend.services.career_service import CareerService
+from backend.services.job_match_service import JobMatchService
 from backend.schemas.job import JobImportRequest, JobSearchRequest
 from backend.providers.adzuna import AdzunaProvider
 from backend.providers.manual import ManualProvider
@@ -32,6 +33,16 @@ def get_job(job_id):
     if not job:
         return jsonify({"error": "NOT_FOUND", "message": f"Job {job_id} not found"}), 404
     return jsonify(job.to_dict()), 200
+
+@jobs_bp.route("/<int:job_id>/match", methods=["GET"])
+def match_job(job_id):
+    """Compare a job's extracted skills against a user's skills profile (Phase 13 / Section 44)."""
+    user_id = request.args.get("user_id", default=1, type=int)
+    try:
+        match_result = JobMatchService.calculate_job_match(job_id=job_id, user_id=user_id)
+        return jsonify(match_result), 200
+    except ValueError as e:
+        return jsonify({"error": "NOT_FOUND", "message": str(e)}), 404
 
 @jobs_bp.route("/import", methods=["POST"])
 def import_job():

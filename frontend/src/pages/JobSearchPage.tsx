@@ -17,11 +17,14 @@ import {
   CheckCircle2,
   SlidersHorizontal,
   Tag,
-  Zap
+  Zap,
+  ShieldCheck,
+  Check
 } from 'lucide-react';
 import { useJobs } from '../hooks/useJobs';
 import { useCareers } from '../hooks/useCareers';
-import type { JobImportPayload, JobSearchCriteria } from '../types/job';
+import { getJobMatch } from '../services/jobService';
+import type { Job, JobImportPayload, JobSearchCriteria, JobMatchResult } from '../types/job';
 
 const SAMPLE_JOB_TEXT = `<h3>Backend Software Engineer (Python / Distributed Systems)</h3>
 <p>We are looking for a Backend Engineer to build scalable APIs and microservices.</p>
@@ -67,7 +70,6 @@ export const JobSearchPage: React.FC = () => {
 
   // Active Ingestion Mode Tab: 'adzuna' | 'file' | 'manual'
   const [ingestionTab, setIngestionTab] = useState<'adzuna' | 'file' | 'manual'>('adzuna');
-  const [descriptionTab, setDescriptionTab] = useState<'cleaned' | 'raw'>('cleaned');
 
   // Adzuna Search Criteria
   const [searchCareerId, setSearchCareerId] = useState<number>(initialRoleId || 2);
@@ -93,6 +95,28 @@ export const JobSearchPage: React.FC = () => {
   const [extractingJobId, setExtractingJobId] = useState<number | null>(null);
   const [batchExtracting, setBatchExtracting] = useState<boolean>(false);
   const [extractionBanner, setExtractionBanner] = useState<string | null>(null);
+
+  // Job Match State (Phase 13 / Section 44)
+  const [modalTab, setModalTab] = useState<'match' | 'cleaned' | 'raw'>('match');
+  const [jobMatch, setJobMatch] = useState<JobMatchResult | null>(null);
+  const [matchLoading, setMatchLoading] = useState<boolean>(false);
+  const [matchFilter, setMatchFilter] = useState<'all' | 'matched' | 'partially_matched' | 'missing'>('all');
+
+  const onOpenJobModal = async (job: Job) => {
+    selectJobForView(job);
+    setModalTab('match');
+    setMatchFilter('all');
+    setMatchLoading(true);
+    try {
+      const match = await getJobMatch(job.id, 1);
+      setJobMatch(match);
+    } catch (err) {
+      console.error('Failed to fetch job match', err);
+      setJobMatch(null);
+    } finally {
+      setMatchLoading(false);
+    }
+  };
 
   // Trigger Live Adzuna Ingestion
   const onTriggerAdzunaSearch = async (e: React.FormEvent) => {
@@ -853,10 +877,11 @@ export const JobSearchPage: React.FC = () => {
               {/* Action Buttons */}
               <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800">
                 <button
-                  onClick={() => selectJobForView(job)}
-                  className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white transition-all cursor-pointer"
+                  onClick={() => onOpenJobModal(job)}
+                  className="px-3.5 py-2 rounded-xl text-xs font-semibold bg-cyan-600/20 text-cyan-300 hover:bg-cyan-600/30 border border-cyan-500/30 hover:border-cyan-500/50 transition-all cursor-pointer flex items-center gap-1.5"
                 >
-                  View Details
+                  <Sparkles className="w-3.5 h-3.5 text-cyan-400" />
+                  <span>Match & Details</span>
                 </button>
                 <button
                   onClick={() => handleDelete(job.id)}
@@ -982,22 +1007,33 @@ export const JobSearchPage: React.FC = () => {
               )}
             </div>
 
-            {/* Description Tab Toggle */}
-            <div className="flex items-center gap-2 mb-3 border-b border-slate-800 pb-2">
+            {/* Modal Tabs Toggle: Section 44 Match | Cleaned | Raw */}
+            <div className="flex items-center gap-2 mb-3 border-b border-slate-800 pb-2 flex-wrap">
               <button
-                onClick={() => setDescriptionTab('cleaned')}
+                onClick={() => setModalTab('match')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer flex items-center gap-1.5 ${
+                  modalTab === 'match'
+                    ? 'bg-gradient-to-r from-cyan-500/20 to-indigo-500/20 text-cyan-300 border border-cyan-500/40 shadow-sm'
+                    : 'text-slate-400 hover:text-slate-200'
+                }`}
+              >
+                <CheckCircle2 className="w-3.5 h-3.5 text-cyan-400" />
+                <span>Requirements Match (Section 44)</span>
+              </button>
+              <button
+                onClick={() => setModalTab('cleaned')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  descriptionTab === 'cleaned'
+                  modalTab === 'cleaned'
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
               >
-                Cleaned Description (HTML Stripped & Normalized)
+                Cleaned Description
               </button>
               <button
-                onClick={() => setDescriptionTab('raw')}
+                onClick={() => setModalTab('raw')}
                 className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all cursor-pointer ${
-                  descriptionTab === 'raw'
+                  modalTab === 'raw'
                     ? 'bg-cyan-500/20 text-cyan-300 border border-cyan-500/30'
                     : 'text-slate-400 hover:text-slate-200'
                 }`}
@@ -1006,12 +1042,198 @@ export const JobSearchPage: React.FC = () => {
               </button>
             </div>
 
-            {/* Description Body */}
-            <div className="flex-1 overflow-y-auto p-4 rounded-xl bg-slate-950 border border-slate-800/80 font-mono text-xs leading-relaxed text-slate-300 whitespace-pre-wrap">
-              {descriptionTab === 'cleaned'
-                ? selectedJob.cleaned_description
-                : selectedJob.raw_description || 'No raw description available.'}
-            </div>
+            {/* Modal Content Body */}
+            {modalTab === 'match' && (
+              <div className="flex-1 overflow-y-auto space-y-4 pr-1">
+                {matchLoading && (
+                  <div className="p-8 text-center text-slate-400 text-xs">
+                    <RefreshCw className="w-5 h-5 animate-spin mx-auto mb-2 text-cyan-400" />
+                    <span>Evaluating skill alignment against your profile...</span>
+                  </div>
+                )}
+
+                {!matchLoading && jobMatch && (
+                  <div className="space-y-4">
+                    {/* Alignment Metrics Dashboard */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 block mb-1">
+                          Required Coverage
+                        </span>
+                        <div className="text-lg font-bold font-mono text-cyan-400">
+                          {jobMatch.summary.required_coverage_pct}%
+                        </div>
+                        <span className="text-[10px] text-slate-500">
+                          {jobMatch.summary.required_matched} / {jobMatch.summary.required_total} core skills
+                        </span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 block mb-1">
+                          Preferred Bonus
+                        </span>
+                        <div className="text-lg font-bold font-mono text-purple-400">
+                          {jobMatch.summary.preferred_matched} / {jobMatch.summary.preferred_total}
+                        </div>
+                        <span className="text-[10px] text-slate-500">Nice-to-have met</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 block mb-1">
+                          Matched Skills
+                        </span>
+                        <div className="text-lg font-bold font-mono text-emerald-400 flex items-center gap-1">
+                          <Check className="w-4 h-4" />
+                          <span>{jobMatch.summary.matched_count}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500">Working proficiency</span>
+                      </div>
+
+                      <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                        <span className="text-[10px] uppercase tracking-wider text-slate-400 block mb-1">
+                          Missing / Gap
+                        </span>
+                        <div className="text-lg font-bold font-mono text-rose-400 flex items-center gap-1">
+                          <X className="w-4 h-4" />
+                          <span>{jobMatch.summary.missing_count}</span>
+                        </div>
+                        <span className="text-[10px] text-slate-500">
+                          +{jobMatch.summary.partially_matched_count} partial
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Filter Pills */}
+                    <div className="flex items-center gap-2 flex-wrap pt-1">
+                      <span className="text-xs font-semibold text-slate-400 mr-1">Filter:</span>
+                      <button
+                        onClick={() => setMatchFilter('all')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer ${
+                          matchFilter === 'all'
+                            ? 'bg-slate-800 text-white'
+                            : 'bg-slate-950 text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        All ({jobMatch.matches.length})
+                      </button>
+                      <button
+                        onClick={() => setMatchFilter('matched')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                          matchFilter === 'matched'
+                            ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                            : 'bg-slate-950 text-slate-400 hover:text-emerald-300'
+                        }`}
+                      >
+                        <span>✓ Matched ({jobMatch.summary.matched_count})</span>
+                      </button>
+                      <button
+                        onClick={() => setMatchFilter('partially_matched')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                          matchFilter === 'partially_matched'
+                            ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                            : 'bg-slate-950 text-slate-400 hover:text-amber-300'
+                        }`}
+                      >
+                        <span>~ Partial ({jobMatch.summary.partially_matched_count})</span>
+                      </button>
+                      <button
+                        onClick={() => setMatchFilter('missing')}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-medium transition-colors cursor-pointer flex items-center gap-1 ${
+                          matchFilter === 'missing'
+                            ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                            : 'bg-slate-950 text-slate-400 hover:text-rose-300'
+                        }`}
+                      >
+                        <span>✗ Missing ({jobMatch.summary.missing_count})</span>
+                      </button>
+                    </div>
+
+                    {/* Requirements Breakdown List */}
+                    <div className="space-y-2.5">
+                      {jobMatch.matches
+                        .filter((m) => matchFilter === 'all' || m.status === matchFilter)
+                        .map((m) => {
+                          const statusStyle = {
+                            matched: 'border-emerald-500/30 bg-emerald-950/15',
+                            partially_matched: 'border-amber-500/30 bg-amber-950/15',
+                            missing: 'border-rose-500/30 bg-rose-950/15',
+                          }[m.status];
+
+                          const badgeStyle = {
+                            matched: 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40',
+                            partially_matched: 'bg-amber-500/20 text-amber-300 border-amber-500/40',
+                            missing: 'bg-rose-500/20 text-rose-300 border-rose-500/40',
+                          }[m.status];
+
+                          return (
+                            <div
+                              key={m.skill_id}
+                              className={`p-3.5 rounded-xl border ${statusStyle} transition-all space-y-1.5`}
+                            >
+                              <div className="flex items-center justify-between gap-2 flex-wrap">
+                                <div className="flex items-center gap-2">
+                                  <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-bold border ${badgeStyle}`}>
+                                    {m.status_symbol} {m.status.replace('_', ' ').toUpperCase()}
+                                  </span>
+                                  <span className="font-bold text-white text-sm">
+                                    {m.skill_name}
+                                  </span>
+                                  <span className="text-[10px] font-mono text-slate-400 px-1.5 py-0.5 rounded bg-slate-900 border border-slate-800">
+                                    {m.category}
+                                  </span>
+                                </div>
+
+                                <div className="flex items-center gap-2 text-xs font-mono">
+                                  <span className={`px-2 py-0.5 rounded text-[10px] uppercase ${
+                                    m.importance === 'required'
+                                      ? 'bg-slate-800 text-cyan-300'
+                                      : 'bg-slate-800 text-purple-300'
+                                  }`}>
+                                    {m.importance}
+                                  </span>
+                                  <span className="text-slate-400 text-[11px]">
+                                    Your Level: <strong className="text-slate-200">{m.user_proficiency_label} ({m.user_proficiency}/4)</strong>
+                                  </span>
+                                </div>
+                              </div>
+
+                              <p className="text-xs text-slate-300 leading-relaxed pl-1">
+                                {m.status_reason}
+                              </p>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    {/* Section 44 Transparency Notice */}
+                    <div className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex items-start gap-2.5 text-xs text-slate-400">
+                      <ShieldCheck className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
+                      <p className="leading-relaxed">
+                        {jobMatch.disclaimer}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!matchLoading && !jobMatch && (
+                  <div className="p-8 text-center text-slate-400 text-xs">
+                    <p>No extracted skills available for this posting to match against.</p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {modalTab === 'cleaned' && (
+              <div className="flex-1 overflow-y-auto p-4 rounded-xl bg-slate-950 border border-slate-800/80 font-mono text-xs leading-relaxed text-slate-300 whitespace-pre-wrap">
+                {selectedJob.cleaned_description}
+              </div>
+            )}
+
+            {modalTab === 'raw' && (
+              <div className="flex-1 overflow-y-auto p-4 rounded-xl bg-slate-950 border border-slate-800/80 font-mono text-xs leading-relaxed text-slate-300 whitespace-pre-wrap">
+                {selectedJob.raw_description || 'No raw description available.'}
+              </div>
+            )}
 
             {/* Modal Footer */}
             <div className="flex items-center justify-between pt-4 mt-4 border-t border-slate-800">

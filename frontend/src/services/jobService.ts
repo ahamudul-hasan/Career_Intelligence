@@ -81,3 +81,15 @@ export const batchExtractSkills = async (
   });
   return response.data;
 };
+
+export const getJobMatch = async (
+  jobId: number,
+  userId: number = 1
+): Promise<import('../types/job').JobMatchResult> => {
+  const response = await api.get<import('../types/job').JobMatchResult>(
+    `/api/jobs/${jobId}/match`,
+    { params: { user_id: userId } }
+  );
+  return response.data;
+};
+
