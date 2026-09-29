@@ -30,7 +30,6 @@ export const Navbar: React.FC<NavbarProps> = () => {
     { to: '/analysis', label: 'Market Demand', icon: BarChart3 },
     { to: '/gaps', label: 'Skill Gaps', icon: Target },
     { to: '/roadmap', label: 'Roadmap', icon: Compass },
-    { to: '/profile', label: 'Profile', icon: User },
   ];
 
   return (
@@ -94,9 +93,13 @@ export const Navbar: React.FC<NavbarProps> = () => {
         <div className="hidden sm:flex items-center gap-2.5">
           <Link
             to="/profile"
-            className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-slate-900/80 border border-slate-800 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-slate-800 transition-all duration-200 shadow-sm"
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium transition-all duration-200 shadow-sm ${
+              location.pathname.startsWith('/profile')
+                ? 'bg-cyan-500/20 text-white border border-cyan-500/40 shadow-[0_0_12px_rgba(6,182,212,0.25)]'
+                : 'bg-slate-900/80 border border-slate-800 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-slate-800'
+            }`}
           >
-            <User className="w-3.5 h-3.5 text-cyan-400" />
+            <User className={`w-3.5 h-3.5 ${location.pathname.startsWith('/profile') ? 'text-cyan-300' : 'text-cyan-400'}`} />
             <span>My Profile</span>
           </Link>
         </div>
