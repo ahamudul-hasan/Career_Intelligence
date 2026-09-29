@@ -9,10 +9,10 @@ export const Footer: React.FC = () => {
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-slate-200 font-semibold">
               <Terminal className="w-4 h-4 text-cyan-400" />
-              <span>CS Career Intelligence</span>
+              <span>Career Intelligence</span>
             </div>
             <p className="text-slate-400 text-xs leading-relaxed">
-              Empirical market intelligence platform for CS careers, transforming live postings into tailored roadmaps.
+              Empirical market intelligence platform for tech careers, transforming live postings into tailored roadmaps.
             </p>
           </div>
 
@@ -58,7 +58,7 @@ export const Footer: React.FC = () => {
 
         <div className="pt-6 border-t border-slate-900 flex flex-col sm:flex-row items-center justify-between gap-4 text-slate-500">
           <div>
-            &copy; {new Date().getFullYear()} CS Career Intelligence Platform. Built for developers.
+            &copy; {new Date().getFullYear()} Career Intelligence Platform. Built for developers.
           </div>
           <div className="flex items-center gap-4">
             <span className="hover:text-slate-400 transition-colors">Evidence-Based</span>

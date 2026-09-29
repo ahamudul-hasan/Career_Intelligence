@@ -7,6 +7,6 @@ def health_check():
     """Health check endpoint returning system status."""
     return jsonify({
         "status": "ok",
-        "service": "CS Career Intelligence API",
+        "service": "Career Intelligence API",
         "version": "1.0.0"
     }), 200

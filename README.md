@@ -1,10 +1,10 @@
 <div align="center">
 
-# 🧭 CS Career Intelligence Platform
+# 🧭 Career Intelligence Platform
 
 ### *Evidence-Based Career Roadmaps Grounded in Real Job Market Data*
 
-An AI-powered intelligence platform that analyzes live tech job postings, calculates empirical skill demand without LLM hallucinations, identifies individual skill gaps, and generates personalized career roadmaps for CS students and developers.
+An AI-powered intelligence platform that analyzes live tech job postings, calculates empirical skill demand without LLM hallucinations, identifies individual skill gaps, and generates personalized career roadmaps for tech students and developers.
 
 <br />
 
@@ -48,7 +48,7 @@ An AI-powered intelligence platform that analyzes live tech job postings, calcul
 
 ## 1. Overview
 
-The **CS Career Intelligence Platform** eliminates the guesswork in tech career preparation. Rather than relying on static blog posts or generic syllabus lists, the platform grounds its insights in live, empirical market data scraped and queried from real job postings.
+The **Career Intelligence Platform** eliminates the guesswork in tech career preparation. Rather than relying on static blog posts or generic syllabus lists, the platform grounds its insights in live, empirical market data scraped and queried from real job postings.
 
 It extracts required technologies, normalizes messy synonyms into canonical concepts, calculates exact statistical demand percentages using deterministic Python and SQL algorithms, benchmarks an individual user's skills against employer requirements, and generates milestone-driven learning roadmaps paired with portfolio projects.
 

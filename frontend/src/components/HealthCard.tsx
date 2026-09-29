@@ -120,7 +120,7 @@ export const HealthCard: React.FC<HealthCardProps> = ({
             <div className="flex items-center gap-2 truncate">
               <Server className="w-4 h-4 text-indigo-400 shrink-0" />
               <span className="text-white font-mono text-sm font-semibold truncate">
-                {health?.service || 'CS Career API'}
+                {health?.service || 'Career Intelligence API'}
               </span>
             </div>
           </div>

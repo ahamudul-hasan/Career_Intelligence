@@ -1,6 +1,6 @@
 # Database Documentation & Reference SQL
 
-This directory holds hand-written reference SQL schemas, seeds, and analytical queries for the **CS Career Intelligence Platform**.
+This directory holds hand-written reference SQL schemas, seeds, and analytical queries for the **Career Intelligence Platform**.
 
 ## Structure
 

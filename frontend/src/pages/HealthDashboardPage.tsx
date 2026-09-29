@@ -31,13 +31,13 @@ export const HealthDashboardPage: React.FC<HealthDashboardPageProps> = ({
           <span>Platform Diagnostics & System Status</span>
         </div>
         <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white mb-4">
-          CS Career & Market <br className="hidden sm:inline" />
+          Career & Market <br className="hidden sm:inline" />
           <span className="bg-gradient-to-r from-cyan-400 via-sky-300 to-indigo-400 bg-clip-text text-transparent">
             Intelligence Platform
           </span>
         </h1>
         <p className="text-slate-400 text-base sm:text-lg leading-relaxed">
-          Evidence-based CS career roadmap engine powered by real job postings,
+          Evidence-based career roadmap engine powered by real job postings,
           deterministic skill gap analytics, and Gemini AI.
         </p>
       </div>

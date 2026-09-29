@@ -1,4 +1,4 @@
--- CS Career Intelligence Platform — Reference Schema
+-- Career Intelligence Platform — Reference Schema
 -- MySQL 8.0+ Dialect
 -- Note: Alembic / Flask-Migrate manages actual migrations in `backend/migrations/`.
 -- This file serves as the canonical reference for hand-written / reference SQL.

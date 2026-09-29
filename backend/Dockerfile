@@ -1,4 +1,4 @@
-# Backend Dockerfile for CS Career Intelligence Platform
+# Backend Dockerfile for Career Intelligence Platform
 FROM python:3.10-slim
 
 # Set environment variables

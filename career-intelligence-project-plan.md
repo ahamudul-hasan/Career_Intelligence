@@ -1,4 +1,4 @@
-# CS Career Intelligence Platform — Step-by-Step Project Plan
+# Career Intelligence Platform — Step-by-Step Project Plan
 
 A practical, phase-by-phase build guide. Follow the phases in order — each one produces a working, testable slice of the system before you move to the next.
 

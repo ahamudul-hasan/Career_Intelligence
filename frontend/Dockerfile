@@ -1,4 +1,4 @@
-# Frontend Multi-Stage Dockerfile for CS Career Intelligence Platform
+# Frontend Multi-Stage Dockerfile for Career Intelligence Platform
 # Stage 1: Build static assets
 FROM node:20-alpine AS builder
 

@@ -24,8 +24,10 @@ export const App: React.FC = () => {
 
         <main className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <Routes>
+            <Route path="/" element={<CareerSelectionPage />} />
+            <Route path="/careers" element={<CareerSelectionPage />} />
             <Route 
-              path="/" 
+              path="/status" 
               element={
                 <HealthDashboardPage
                   health={health}
@@ -37,7 +39,6 @@ export const App: React.FC = () => {
                 />
               } 
             />
-            <Route path="/careers" element={<CareerSelectionPage />} />
             <Route path="/jobs" element={<JobSearchPage />} />
             <Route path="/analysis" element={<MarketAnalysisPage />} />
             <Route path="/gaps" element={<SkillGapPage />} />

@@ -8,7 +8,6 @@ import {
   Target, 
   Compass, 
   User,
-  Activity,
   Menu,
   X,
   ChevronRight
@@ -16,15 +15,14 @@ import {
 import type { HealthResponse } from '../types/health';
 
 interface NavbarProps {
-  health: HealthResponse | null;
-  loading: boolean;
+  health?: HealthResponse | null;
+  loading?: boolean;
   onRefresh?: () => void;
 }
 
-export const Navbar: React.FC<NavbarProps> = ({ health, loading }) => {
+export const Navbar: React.FC<NavbarProps> = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const isHealthy = health?.status === 'ok';
 
   const navItems = [
     { to: '/careers', label: 'Careers', icon: Briefcase },
@@ -66,7 +64,10 @@ export const Navbar: React.FC<NavbarProps> = ({ health, loading }) => {
         {/* Center Desktop Navigation: Segmented Glass Capsule */}
         <nav className="hidden lg:flex items-center bg-slate-900/60 p-1 rounded-full border border-white/[0.08] backdrop-blur-md shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)]">
           {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.to);
+            const isActive =
+              item.to === '/careers'
+                ? location.pathname === '/' || location.pathname.startsWith('/careers')
+                : location.pathname.startsWith(item.to);
             return (
               <NavLink
                 key={item.to}
@@ -89,34 +90,14 @@ export const Navbar: React.FC<NavbarProps> = ({ health, loading }) => {
           })}
         </nav>
 
-        {/* Right Section: System Status & Diagnostics Link */}
+        {/* Right Section: Quick Action */}
         <div className="hidden sm:flex items-center gap-2.5">
-          {/* Health Diagnostics Badge */}
           <Link
-            to="/"
-            title="View System Health Diagnostics"
-            className={`group flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium border transition-all duration-200 ${
-              loading
-                ? 'bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20'
-                : isHealthy
-                ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.15)]'
-                : 'bg-rose-500/10 text-rose-400 border-rose-500/20 hover:bg-rose-500/20'
-            }`}
+            to="/profile"
+            className="flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-medium bg-slate-900/80 border border-slate-800 text-slate-300 hover:text-white hover:border-cyan-500/40 hover:bg-slate-800 transition-all duration-200 shadow-sm"
           >
-            <span className="relative flex h-2 w-2">
-              {isHealthy && !loading && (
-                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-              )}
-              <span 
-                className={`relative inline-flex rounded-full h-2 w-2 ${
-                  loading ? 'bg-amber-400' : isHealthy ? 'bg-emerald-400' : 'bg-rose-400'
-                }`} 
-              />
-            </span>
-            <span className="font-mono text-[11px] font-semibold tracking-wide">
-              {loading ? 'Verifying...' : isHealthy ? 'Live Systems' : 'API Offline'}
-            </span>
-            <Activity className="w-3 h-3 text-slate-500 group-hover:text-cyan-400 transition-colors" />
+            <User className="w-3.5 h-3.5 text-cyan-400" />
+            <span>My Profile</span>
           </Link>
         </div>
 
@@ -139,7 +120,10 @@ export const Navbar: React.FC<NavbarProps> = ({ health, loading }) => {
             Platform Navigation
           </div>
           {navItems.map((item) => {
-            const isActive = location.pathname.startsWith(item.to);
+            const isActive =
+              item.to === '/careers'
+                ? location.pathname === '/' || location.pathname.startsWith('/careers')
+                : location.pathname.startsWith(item.to);
             return (
               <Link
                 key={item.to}
@@ -164,17 +148,14 @@ export const Navbar: React.FC<NavbarProps> = ({ health, loading }) => {
 
           <div className="pt-3 border-t border-slate-900 flex items-center justify-between px-2">
             <Link
-              to="/"
+              to="/profile"
               onClick={() => setMobileMenuOpen(false)}
               className="text-xs font-mono text-slate-400 hover:text-cyan-400 flex items-center gap-1.5"
             >
-              <Activity className="w-3.5 h-3.5" />
-              <span>System Health Diagnostics</span>
+              <User className="w-3.5 h-3.5 text-cyan-400" />
+              <span>Manage Profile</span>
             </Link>
-            <div className="flex items-center gap-1.5 text-[11px] font-mono text-emerald-400">
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-              <span>API Online</span>
-            </div>
+            <span className="text-[11px] text-slate-500 font-mono">Career Intelligence</span>
           </div>
         </div>
       )}
