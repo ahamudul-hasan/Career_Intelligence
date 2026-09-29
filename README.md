@@ -446,19 +446,3 @@ Select Career (e.g. 'Backend Developer')
 - **Experience Level Heuristics**: Certain postings omit explicit seniority tags; the platform categorizes these as `All` or `entry_level` based on title heuristics.
 
 ---
-
-## 16. Future Roadmap
-
-- **Resume PDF Extraction (Section 53)**: Upload PDF resume &rarr; text extraction &rarr; LLM structured skill profiling &rarr; auto-population of user proficiency levels.
-- **GitHub Repository Analysis (Section 54)**: Connect GitHub OAuth &rarr; analyze languages and repository dependencies &rarr; generate verifiable evidence for user skills.
-- **Historical Trend Visualizations (Section 55)**: Track skill demand fluctuations across quarterly snapshots.
-- **Job Market RAG (Section 51)**: Vector embeddings for job postings allowing natural language queries ("Which remote backend roles demand Go over Java?").
-- **LangGraph Agent Workflow (Section 52)**: Refactor the multi-step pipeline into a modular state graph with self-correcting evaluation nodes.
-
----
-
-## 17. License & Credits
-
-Developed with ❤️ as an open-source educational platform for computer science students and engineers worldwide.
-
-Distributed under the **MIT License**.
